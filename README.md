@@ -1,38 +1,48 @@
-# sv
+# HN-RSS
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A clean, fast SvelteKit app for browsing top Hacker News stories filtered by time range.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Time-filtered stories**: View top stories from the past 24 hours, 7 days, or 30 days
+- **Ranked by score**: Displays the top 20 stories sorted by points (minimum 10 points)
+- **Direct links**: Click through to story URLs or HN discussions
+- **Responsive design**: Works seamlessly on mobile and desktop
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+- **Svelte 5** with runes syntax
+- **SvelteKit 2** for server-side rendering
+- **Algolia HN Search API** for real-time story data
+- **TypeScript** for type safety
+- **pnpm** for package management
 
-## Developing
+## Development
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-pnpm run dev
-
-# or start the server and open the app in a new browser tab
-pnpm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
+Install dependencies:
 
 ```sh
-pnpm run build
+pnpm install
 ```
 
-You can preview the production build with `npm run preview`.
+Start the dev server:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```sh
+pnpm dev
+```
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+Preview production build:
+
+```sh
+pnpm preview
+```
+
+## How It Works
+
+The app queries the Algolia HN Search API with timestamp and score filters to fetch recent stories. Stories are sorted by points and limited to the top 10 results. The time range can be adjusted using the filter buttons in the UI.

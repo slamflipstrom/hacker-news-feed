@@ -13,7 +13,7 @@ This project uses `pnpm` as the package manager.
 - **Start dev server**: `pnpm dev`
 - **Build for production**: `pnpm build`
 - **Preview production build**: `pnpm preview`
-- **Type checking**: `pnpm check`
+- **Type checking**: `pnpm typecheck`
 - **Type checking (watch mode)**: `pnpm check:watch`
 
 ## Architecture
