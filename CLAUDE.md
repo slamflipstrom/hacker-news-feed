@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HN-RSS is a SvelteKit application that fetches and displays Hacker News stories filtered by time range (1h, 24h, 7d, 30d). The app uses the official Hacker News Firebase API to retrieve top stories and filter them based on recency and score.
+HN-RSS is a SvelteKit application that fetches and displays the top 10 Hacker News stories filtered by time range (1h, 24h, 7d, 30d). The app uses the Algolia HN Search API to retrieve and filter stories based on recency and score. Built with Svelte 5 using runes syntax.
 
 ## Development Commands
 
@@ -20,10 +20,11 @@ This project uses `pnpm` as the package manager.
 
 ### SvelteKit Structure
 
+- **Svelte Version**: Svelte 5 with runes syntax (`$props()`, `$effect()`, snippet rendering)
 - **Routes**: Uses SvelteKit's file-based routing in `src/routes/`
-  - `+page.server.ts` handles server-side data loading with `TimeRange` query param
-  - `+page.svelte` renders the main UI
-  - `+layout.svelte` provides app-wide layout
+  - `+page.server.ts` handles server-side data loading with `TimeRange` query param, returns stories array, timeRange, and loadedAt timestamp
+  - `+page.svelte` renders the main UI using Svelte 5 runes syntax
+  - `+layout.svelte` provides app-wide layout with favicon injection
 
 ### Hacker News API Client (`src/lib/hn-client.ts`)
 
@@ -31,28 +32,72 @@ The core logic for fetching HN stories using the Algolia HN Search API:
 
 - **`getStoriesInTimeRange(timeRange, limit)`**: Main function that:
   1. Calculates timestamp cutoff based on time range
-  2. Queries Algolia API with `search_by_date` endpoint
-  3. Applies numeric filters: `created_at_i > timeLimit` and `points > 0`
-  4. Fetches 5x the limit to ensure high-quality results
+  2. Queries Algolia API with `/search` endpoint
+  3. Applies numeric filters: `created_at_i > timeLimit` and `points > 10` (minimum 10 points)
+  4. Fetches 10x the limit (capped at 1000 max) to ensure high-quality results
   5. Sorts by points descending and returns top N stories
+  6. Includes extensive console logging for debugging
 
 **Time ranges**: `1h` (3600s), `24h` (86400s), `7d` (604800s), `30d` (2592000s)
 
-**API**: Uses `https://hn.algolia.com/api/v1/search_by_date` with tags=story filter
+**API**: Uses `https://hn.algolia.com/api/v1/search` with `tags=story` filter and numeric filters for time range and minimum points
 
 ### Data Flow
 
 1. User navigates to page with optional `?range={timeRange}` query param
-2. `+page.server.ts` loads stories via `getStoriesInTimeRange()` (defaults to 24h)
-3. Single API call to Algolia with timestamp and score filters
-4. Results sorted by points and limited to top 10
-5. Stories rendered with metadata (points, author, time, comments)
+2. `+page.server.ts` loads stories via `getStoriesInTimeRange()` (defaults to 24h, fetches 10 stories)
+3. Single API call to Algolia with timestamp filter (`created_at_i > timeLimit`) and minimum points filter (`points > 10`)
+4. Algolia returns up to 10x requested stories (capped at 1000)
+5. Results sorted by points descending and limited to top 10
+6. Server returns `{ stories, timeRange, loadedAt }` to client
+7. Svelte 5 component renders stories using `$props()` and `$effect()` runes
+8. User can click time range buttons to reload with different filters (uses SvelteKit navigation with `data-sveltekit-noscroll`)
 
 ### Key TypeScript Interfaces
 
 - **`HNStory`**: Story object with objectID, title, url, points, author, created_at_i, num_comments
 - **`TimeRange`**: Union type of valid time range strings ("1h" | "24h" | "7d" | "30d")
-- **`AlgoliaResponse`**: Internal interface wrapping hits array
+- **`AlgoliaResponse`**: Internal interface wrapping hits array from Algolia API
+
+### UI Features (`+page.svelte`)
+
+- **Svelte 5 Runes**: Uses modern Svelte 5 syntax
+  - `$props()` for reactive component props
+  - `$effect()` for side effects and debugging
+  - Snippet rendering with `{@render children?.()}`
+- **Time Range Selector**: Interactive buttons for 1h, 24h, 7d, 30d filters
+- **Story List**: Ranked list (1-10) with:
+  - Story title linking to external URL (or HN discussion if no URL)
+  - Points (score) displayed prominently in orange
+  - Author name
+  - Relative time formatting (e.g., "3h ago", "2d ago")
+  - Comment count linking to HN discussion
+- **Responsive Design**: Mobile-friendly layout with flexbox
+- **Styling**: Custom CSS with HN orange (#ff6600) accent color, hover effects
+
+## Tech Stack
+
+- **Framework**: SvelteKit 2.x
+- **UI Library**: Svelte 5.x (using runes syntax)
+- **Package Manager**: pnpm
+- **TypeScript**: Full type safety throughout
+- **Build Tool**: Vite 7.x
+- **Adapter**: @sveltejs/adapter-auto (auto-detects deployment platform)
+- **API**: Algolia HN Search API (https://hn.algolia.com/api/v1/)
+
+## File Structure
+
+```
+src/
+├── lib/
+│   ├── assets/          # Static assets (favicon, etc.)
+│   └── hn-client.ts     # Algolia API client
+├── routes/
+│   ├── +layout.svelte   # Root layout with favicon
+│   ├── +page.svelte     # Main UI component (Svelte 5)
+│   └── +page.server.ts  # Server-side data loading
+└── app.d.ts             # TypeScript declarations
+```
 
 ## MCP
 
