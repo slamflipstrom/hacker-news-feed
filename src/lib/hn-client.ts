@@ -1,60 +1,70 @@
 export interface HNStory {
-	id: number;
-	title: string;
-	url?: string;
-	score: number;
-	by: string;
-	time: number;
-	descendants: number;
+  objectID: string;
+  title: string;
+  url?: string;
+  points: number;
+  author: string;
+  created_at_i: number;
+  num_comments: number;
 }
 
-export type TimeRange = '1h' | '24h' | '7d' | '30d';
+export type TimeRange = "1h" | "24h" | "7d" | "30d";
 
-const HN_API_BASE = 'https://hacker-news.firebaseio.com/v0';
+const ALGOLIA_API_BASE = "https://hn.algolia.com/api/v1";
 
-export async function getTopStories(limit: number = 500): Promise<number[]> {
-	const response = await fetch(`${HN_API_BASE}/topstories.json`);
-	const storyIds = await response.json();
-	return storyIds.slice(0, limit);
-}
-
-export async function getStory(id: number): Promise<HNStory | null> {
-	const response = await fetch(`${HN_API_BASE}/item/${id}.json`);
-	if (!response.ok) return null;
-	return response.json();
+interface AlgoliaResponse {
+  hits: HNStory[];
 }
 
 export async function getStoriesInTimeRange(
-	timeRange: TimeRange,
-	topN: number = 10
+  timeRange: TimeRange,
+  limit: number = 10
 ): Promise<HNStory[]> {
-	const now = Date.now() / 1000; // Convert to seconds
-	const timeRanges: Record<TimeRange, number> = {
-		'1h': 3600,
-		'24h': 86400,
-		'7d': 604800,
-		'30d': 2592000
-	};
+  const now = Math.floor(Date.now() / 1000);
+  const timeRanges: Record<TimeRange, number> = {
+    "1h": 3600,
+    "24h": 86400,
+    "7d": 604800,
+    "30d": 2592000,
+  };
 
-	const timeLimit = now - timeRanges[timeRange];
+  const timeLimit = now - timeRanges[timeRange];
 
-	// Fetch top stories IDs
-	const storyIds = await getTopStories(500);
+  // Fetch more results than needed to ensure we get the highest-scored stories
+  const fetchLimit = Math.min(limit * 10, 1000); // Increase multiplier and cap at API max
 
-	// Fetch story details in parallel
-	const stories = await Promise.all(
-		storyIds.map(id => getStory(id))
-	);
+  console.log(
+    "timeLimit",
+    timeLimit,
+    "timestamp:",
+    new Date(timeLimit * 1000).toISOString()
+  );
 
-	// Filter by time range and sort by score
-	const filteredStories = stories
-		.filter((story): story is HNStory =>
-			story !== null &&
-			story.time >= timeLimit &&
-			story.score > 0
-		)
-		.sort((a, b) => b.score - a.score)
-		.slice(0, topN);
+  const url = new URL(`${ALGOLIA_API_BASE}/search`);
+  url.searchParams.set("tags", "story");
+  url.searchParams.set("numericFilters", `created_at_i>${timeLimit},points>10`); // Require minimum 10 points
+  url.searchParams.set("hitsPerPage", fetchLimit.toString());
 
-	return filteredStories;
+  console.log(`Fetching stories for ${timeRange}, URL:`, url.toString());
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Algolia API error: ${response.statusText}`);
+  }
+
+  const data: AlgoliaResponse = await response.json();
+  console.log(`Fetched ${data.hits.length} stories for ${timeRange}`);
+
+  // Sort by points descending and return top N
+  const sorted = data.hits.sort((a, b) => b.points - a.points).slice(0, limit);
+  console.log(
+    `Top 3 stories for ${timeRange}:`,
+    sorted
+      .slice(0, 3)
+      .map(
+        (s) =>
+          `${s.title.substring(0, 30)}... (${s.points}pts, id:${s.objectID})`
+      )
+  );
+  return sorted;
 }

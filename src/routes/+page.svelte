@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 
-	let { data }: { data: PageData } = $props();
+	const props: { data: PageData } = $props();
 
 	const timeRanges = [
 		{ value: '1h', label: 'Last Hour' },
@@ -22,17 +23,19 @@
 		if (diffDays < 7) return `${diffDays}d ago`;
 		return date.toLocaleDateString();
 	}
+
 </script>
 
 <div class="container">
 	<header>
 		<h1>🔥 Top 10 Hacker News Stories</h1>
 		<div class="time-range-selector">
-			{#each timeRanges as range}
+			{#each timeRanges as range (range.value)}
 				<a
-					href="?range={range.value}"
+					href={resolve('/') + '?range=' + range.value}
 					class="range-btn"
-					class:active={data.timeRange === range.value}
+					class:active={props.data.timeRange === range.value}
+					data-sveltekit-noscroll
 				>
 					{range.label}
 				</a>
@@ -41,31 +44,31 @@
 	</header>
 
 	<main>
-		{#if data.stories.length === 0}
+		{#if props.data.stories.length === 0}
 			<p class="no-stories">No stories found in this time range.</p>
 		{:else}
 			<ol class="story-list">
-				{#each data.stories as story, index}
+				{#each props.data.stories as story, index (story.objectID)}
 					<li class="story-item">
 						<div class="rank">#{index + 1}</div>
 						<div class="story-content">
 							<h2>
 								{#if story.url}
-									<a href={story.url} target="_blank" rel="noopener noreferrer">
+									<a href={story.url} target="_blank" rel="external noopener noreferrer">
 										{story.title}
 									</a>
 								{:else}
-									<a href="https://news.ycombinator.com/item?id={story.id}" target="_blank" rel="noopener noreferrer">
+									<a href="https://news.ycombinator.com/item?id={story.objectID}" target="_blank" rel="external noopener noreferrer">
 										{story.title}
 									</a>
 								{/if}
 							</h2>
 							<div class="story-meta">
-								<span class="score">{story.score} points</span>
-								<span>by {story.by}</span>
-								<span>{formatTime(story.time)}</span>
-								<a href="https://news.ycombinator.com/item?id={story.id}" target="_blank" rel="noopener noreferrer">
-									{story.descendants || 0} comments
+								<span class="score">{story.points} points</span>
+								<span>by {story.author}</span>
+								<span>{formatTime(story.created_at_i)}</span>
+								<a href="https://news.ycombinator.com/item?id={story.objectID}" target="_blank" rel="external noopener noreferrer">
+									{story.num_comments|| 0} comments
 								</a>
 							</div>
 						</div>
