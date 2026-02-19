@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { TimeRange } from '$lib/hn-client';
 	import { resolve } from '$app/paths';
+	import type { PageData } from './$types';
 
 	const props: { data: PageData } = $props();
 
-	const timeRanges = [
-		{ value: '1h', label: 'Last Hour' },
+	const timeRanges: Array<{ value: TimeRange; label: string }> = [
 		{ value: '24h', label: 'Last 24 Hours' },
 		{ value: '7d', label: 'Last 7 Days' },
 		{ value: '30d', label: 'Last 30 Days' }
@@ -23,12 +23,11 @@
 		if (diffDays < 7) return `${diffDays}d ago`;
 		return date.toLocaleDateString();
 	}
-
 </script>
 
 <div class="container">
 	<header>
-		<h1>🔥 Top 10 Hacker News Stories</h1>
+		<h1>🔥 Top {props.data.storiesLimit} Hacker News Stories</h1>
 		<div class="time-range-selector">
 			{#each timeRanges as range (range.value)}
 				<a
@@ -44,6 +43,10 @@
 	</header>
 
 	<main>
+		{#if props.data.error}
+			<p class="error-message">{props.data.error}</p>
+		{/if}
+
 		{#if props.data.stories.length === 0}
 			<p class="no-stories">No stories found in this time range.</p>
 		{:else}
@@ -58,7 +61,11 @@
 										{story.title}
 									</a>
 								{:else}
-									<a href="https://news.ycombinator.com/item?id={story.objectID}" target="_blank" rel="external noopener noreferrer">
+									<a
+										href="https://news.ycombinator.com/item?id={story.objectID}"
+										target="_blank"
+										rel="external noopener noreferrer"
+									>
 										{story.title}
 									</a>
 								{/if}
@@ -67,8 +74,12 @@
 								<span class="score">{story.points} points</span>
 								<span>by {story.author}</span>
 								<span>{formatTime(story.created_at_i)}</span>
-								<a href="https://news.ycombinator.com/item?id={story.objectID}" target="_blank" rel="external noopener noreferrer">
-									{story.num_comments|| 0} comments
+								<a
+									href="https://news.ycombinator.com/item?id={story.objectID}"
+									target="_blank"
+									rel="external noopener noreferrer"
+								>
+									{story.num_comments || 0} comments
 								</a>
 							</div>
 						</div>
@@ -84,7 +95,9 @@
 		max-width: 900px;
 		margin: 0 auto;
 		padding: 2rem 1rem;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+		font-family:
+			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+			sans-serif;
 	}
 
 	header {
@@ -192,6 +205,15 @@
 
 	.story-meta a:hover {
 		color: #ff6600;
+	}
+
+	.error-message {
+		background: #fff5f5;
+		border: 1px solid #ffd5d5;
+		color: #b20000;
+		padding: 0.75rem 1rem;
+		border-radius: 6px;
+		margin-bottom: 1rem;
 	}
 
 	.no-stories {

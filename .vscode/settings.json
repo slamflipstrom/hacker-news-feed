@@ -1,4 +1,5 @@
 {
+  "workbench.colorTheme": "Catppuccin Frappé",
   "files.exclude": {
     "**/.svelte-kit": true
   }
