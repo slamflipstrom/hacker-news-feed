@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HN-RSS is a SvelteKit application that fetches and displays the top 10 Hacker News stories filtered by time range (1h, 24h, 7d, 30d). The app uses the Algolia HN Search API to retrieve and filter stories based on recency and score. Built with Svelte 5 using runes syntax.
+HN-RSS is a SvelteKit application that fetches and displays the top 10 Hacker News stories filtered by time range (24h, 7d, 30d). The app uses the Algolia HN Search API to retrieve and filter stories based on recency and score. Built with Svelte 5 using runes syntax.
 
 ## Development Commands
 
@@ -38,7 +38,7 @@ The core logic for fetching HN stories using the Algolia HN Search API:
   5. Sorts by points descending and returns top N stories
   6. Includes extensive console logging for debugging
 
-**Time ranges**: `1h` (3600s), `24h` (86400s), `7d` (604800s), `30d` (2592000s)
+**Time ranges**: `24h` (86400s), `7d` (604800s), `30d` (2592000s)
 
 **API**: Uses `https://hn.algolia.com/api/v1/search` with `tags=story` filter and numeric filters for time range and minimum points
 
@@ -56,7 +56,7 @@ The core logic for fetching HN stories using the Algolia HN Search API:
 ### Key TypeScript Interfaces
 
 - **`HNStory`**: Story object with objectID, title, url, points, author, created_at_i, num_comments
-- **`TimeRange`**: Union type of valid time range strings ("1h" | "24h" | "7d" | "30d")
+- **`TimeRange`**: Union type of valid time range strings ("24h" | "7d" | "30d")
 - **`AlgoliaResponse`**: Internal interface wrapping hits array from Algolia API
 
 ### UI Features (`+page.svelte`)
@@ -65,7 +65,7 @@ The core logic for fetching HN stories using the Algolia HN Search API:
   - `$props()` for reactive component props
   - `$effect()` for side effects and debugging
   - Snippet rendering with `{@render children?.()}`
-- **Time Range Selector**: Interactive buttons for 1h, 24h, 7d, 30d filters
+- **Time Range Selector**: Interactive buttons for 24h, 7d, 30d filters
 - **Story List**: Ranked list (1-10) with:
   - Story title linking to external URL (or HN discussion if no URL)
   - Points (score) displayed prominently in orange

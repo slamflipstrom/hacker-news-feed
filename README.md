@@ -45,4 +45,4 @@ pnpm preview
 
 ## How It Works
 
-The app queries the Algolia HN Search API with timestamp and score filters to fetch recent stories. Stories are sorted by points and limited to the top 10 results. The time range can be adjusted using the filter buttons in the UI.
+The app queries the Algolia HN Search API with timestamp and score filters to fetch recent stories. Stories are sorted by points and limited to the top 20 results. The time range can be adjusted using the filter buttons in the UI.

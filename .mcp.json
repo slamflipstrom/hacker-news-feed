@@ -7,7 +7,9 @@
         "-y",
         "@sveltejs/mcp"
       ],
-      "env": {}
+      "env": {
+        "PATH": "/Users/samlindstrom/.nvm/versions/node/v22.22.0/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+      }
     }
   }
 }
