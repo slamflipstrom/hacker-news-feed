@@ -1,48 +1,42 @@
 # HN-RSS
 
-A clean, fast SvelteKit app for browsing top Hacker News stories filtered by time range.
+A focused SvelteKit reader for high-signal Hacker News stories.
 
 ## Features
 
-- **Time-filtered stories**: View top stories from the past 24 hours, 7 days, or 30 days
-- **Ranked by score**: Displays the top 20 stories sorted by points (minimum 10 points)
-- **Direct links**: Click through to story URLs or HN discussions
-- **Responsive design**: Works seamlessly on mobile and desktop
+- Top **20** stories in `24h`, `7d`, or `30d` windows
+- Sorting modes: `Top`, `Newest`, `Most Commented`
+- Read flow UX: queue, read/save state, and quick actions (`Open`, `Save`, `Skip`)
+- Keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read
+- Persistent preferences (`range`, `sort`, `hideRead`) across visits
+- Mobile-friendly UI
 
-## Tech Stack
-
-- **Svelte 5** with runes syntax
-- **SvelteKit 2** for server-side rendering
-- **Algolia HN Search API** for real-time story data
-- **TypeScript** for type safety
-- **pnpm** for package management
-
-## Development
-
-Install dependencies:
+## Quick Start
 
 ```sh
 pnpm install
-```
-
-Start the dev server:
-
-```sh
 pnpm dev
 ```
 
-Build for production:
+Other useful commands:
 
-```sh
-pnpm build
-```
-
-Preview production build:
-
-```sh
-pnpm preview
-```
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm preview`
 
 ## How It Works
 
-The app queries the Algolia HN Search API with timestamp and score filters to fetch recent stories. Stories are sorted by points and limited to the top 20 results. The time range can be adjusted using the filter buttons in the UI.
+The server fetches stories from the Algolia HN Search API (`tags=story`) with:
+
+- Time cutoff based on selected range
+- Minimum score filter (`points > 10`)
+- Retry + backoff for transient failures
+- Multi-page fetch/dedupe before returning top results
+
+Client-side controls then apply sort and hide-read filtering.
+
+## Query Params
+
+- `range`: `24h | 7d | 30d`
+- `sort`: `top | new | comments`
+- `hideRead`: `1` to show only unread stories
