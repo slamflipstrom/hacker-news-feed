@@ -82,6 +82,10 @@
 		return story.url ?? `https://news.ycombinator.com/item?id=${story.objectID}`;
 	}
 
+	function getCommentsHref(story: HNStory): string {
+		return `https://news.ycombinator.com/item?id=${story.objectID}`;
+	}
+
 	function getStoryDomain(story: HNStory): string {
 		if (!story.url) return 'news.ycombinator.com';
 
@@ -209,6 +213,10 @@
 		window.open(getStoryHref(story), '_blank', 'noopener,noreferrer');
 	}
 
+	function openStoryComments(story: HNStory): void {
+		window.open(getCommentsHref(story), '_blank', 'noopener,noreferrer');
+	}
+
 	function handleKeyboardShortcuts(event: KeyboardEvent): void {
 		if (event.metaKey || event.ctrlKey || event.altKey) return;
 
@@ -254,6 +262,12 @@
 		if (key === 'm') {
 			event.preventDefault();
 			markStoryRead(activeStory.objectID);
+			return;
+		}
+
+		if (key === 'c') {
+			event.preventDefault();
+			openStoryComments(activeStory);
 		}
 	}
 
@@ -397,7 +411,7 @@
 				{hideReadStories ? 'Unread only' : 'Show read'}
 			</button>
 		</div>
-		<p class="keyboard-hint">Keyboard: j/k navigate • o open • s save • m mark read</p>
+		<p class="keyboard-hint">Keyboard: j/k navigate • o open • c comments • s save • m mark read</p>
 	</header>
 
 	<main>
@@ -515,7 +529,7 @@
 								<div class="story-meta-badges">
 									<span class="meta-badge meta-badge-score">{story.points} pts</span>
 									<a
-										href="https://news.ycombinator.com/item?id={story.objectID}"
+										href={getCommentsHref(story)}
 										target="_blank"
 										rel="external noopener noreferrer"
 										class="meta-badge meta-badge-comments"
