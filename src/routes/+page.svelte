@@ -1,15 +1,46 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import type { TimeRange } from '$lib/hn-client';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	const props: { data: PageData } = $props();
+	const READ_STORAGE_KEY = 'hnrss:read-story-ids';
+	const SAVED_STORAGE_KEY = 'hnrss:saved-story-ids';
+	let readStoryIds = $state<string[]>([]);
+	let savedStoryIds = $state<string[]>([]);
+	let hasHydratedStoryState = false;
 
 	const timeRanges: Array<{ value: TimeRange; label: string }> = [
 		{ value: '24h', label: 'Last 24 Hours' },
 		{ value: '7d', label: 'Last 7 Days' },
 		{ value: '30d', label: 'Last 30 Days' }
 	];
+
+	function parseStoredIds(value: string | null): string[] {
+		if (!value) return [];
+
+		try {
+			const parsed = JSON.parse(value);
+			if (!Array.isArray(parsed)) return [];
+			return Array.from(new Set(parsed.filter((item): item is string => typeof item === 'string')));
+		} catch {
+			return [];
+		}
+	}
+
+	function isStoryRead(storyId: string): boolean {
+		return readStoryIds.includes(storyId);
+	}
+
+	function isStorySaved(storyId: string): boolean {
+		return savedStoryIds.includes(storyId);
+	}
+
+	function markStoryRead(storyId: string): void {
+		if (isStoryRead(storyId)) return;
+		readStoryIds = [...readStoryIds, storyId];
+	}
 
 	function formatTime(timestamp: number): string {
 		const date = new Date(timestamp * 1000);
@@ -23,6 +54,21 @@
 		if (diffDays < 7) return `${diffDays}d ago`;
 		return date.toLocaleDateString();
 	}
+
+	$effect(() => {
+		if (!browser || hasHydratedStoryState) return;
+
+		readStoryIds = parseStoredIds(localStorage.getItem(READ_STORAGE_KEY));
+		savedStoryIds = parseStoredIds(localStorage.getItem(SAVED_STORAGE_KEY));
+		hasHydratedStoryState = true;
+	});
+
+	$effect(() => {
+		if (!browser || !hasHydratedStoryState) return;
+
+		localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readStoryIds));
+		localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(savedStoryIds));
+	});
 </script>
 
 <div class="container">
@@ -52,12 +98,17 @@
 		{:else}
 			<ol class="story-list">
 				{#each props.data.stories as story, index (story.objectID)}
-					<li class="story-item">
+					<li class="story-item" class:read={isStoryRead(story.objectID)}>
 						<div class="rank">#{index + 1}</div>
 						<div class="story-content">
 							<h2>
 								{#if story.url}
-									<a href={story.url} target="_blank" rel="external noopener noreferrer">
+									<a
+										href={story.url}
+										target="_blank"
+										rel="external noopener noreferrer"
+										onclick={() => markStoryRead(story.objectID)}
+									>
 										{story.title}
 									</a>
 								{:else}
@@ -65,12 +116,19 @@
 										href="https://news.ycombinator.com/item?id={story.objectID}"
 										target="_blank"
 										rel="external noopener noreferrer"
+										onclick={() => markStoryRead(story.objectID)}
 									>
 										{story.title}
 									</a>
 								{/if}
 							</h2>
 							<div class="story-meta">
+								{#if isStoryRead(story.objectID)}
+									<span class="status-badge status-read">Read</span>
+								{/if}
+								{#if isStorySaved(story.objectID)}
+									<span class="status-badge status-saved">Saved</span>
+								{/if}
 								<span class="score">{story.points} points</span>
 								<span>by {story.author}</span>
 								<span>{formatTime(story.created_at_i)}</span>
@@ -124,6 +182,7 @@
 		cursor: pointer;
 		text-decoration: none;
 		color: #333;
+		font-size: 0.95rem;
 		transition: all 0.2s;
 	}
 
@@ -159,6 +218,16 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
+	.story-item.read {
+		background: #fafafa;
+		border-color: #ececec;
+		opacity: 0.72;
+	}
+
+	.story-item.read:hover {
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+	}
+
 	.rank {
 		font-size: 1.5rem;
 		font-weight: bold;
@@ -191,6 +260,25 @@
 		font-size: 0.875rem;
 		color: #666;
 		flex-wrap: wrap;
+	}
+
+	.status-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.status-read {
+		background: #f0f0f0;
+		color: #666;
+	}
+
+	.status-saved {
+		background: #fff0e5;
+		color: #cc5a00;
 	}
 
 	.score {
@@ -232,6 +320,17 @@
 			font-size: 1.5rem;
 		}
 
+		.time-range-selector {
+			gap: 0.375rem;
+		}
+
+		.range-btn {
+			padding: 0.35rem 0.65rem;
+			font-size: 0.8rem;
+			border-width: 1px;
+			border-radius: 5px;
+		}
+
 		.story-item {
 			flex-direction: column;
 			gap: 0.5rem;
@@ -239,6 +338,13 @@
 
 		.rank {
 			min-width: auto;
+		}
+	}
+
+	@media (max-width: 380px) {
+		.range-btn {
+			padding: 0.3rem 0.5rem;
+			font-size: 0.75rem;
 		}
 	}
 </style>
