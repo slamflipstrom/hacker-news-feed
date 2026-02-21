@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import { resolve } from '$app/paths';
 	import {
@@ -147,7 +148,13 @@
 		const nextUrl = new URL(window.location.href);
 		const query = getQueryForPreferences(selectedTimeRange, selectedSortMode, hideReadStories);
 		nextUrl.search = query;
-		history.replaceState(history.state, '', nextUrl);
+		try {
+			replaceState(nextUrl, page.state);
+			return;
+		} catch {
+			// Router can be uninitialized during hydration; fall back to the browser API.
+			history.replaceState(history.state, '', nextUrl);
+		}
 	}
 
 	async function selectTimeRange(timeRange: TimeRange): Promise<void> {
