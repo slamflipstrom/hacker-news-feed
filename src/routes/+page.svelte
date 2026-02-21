@@ -1,23 +1,48 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import { resolve } from '$app/paths';
+	import {
+		PREFERENCE_COOKIE_KEYS,
+		PREFERENCE_STORAGE_KEYS,
+		SORT_MODES,
+		encodeHideReadPreference,
+		isPreferredRange,
+		isSortMode,
+		parseHideReadPreference,
+		type SortMode
+	} from '$lib/preferences';
 	import type { PageData } from './$types';
 
 	const props: { data: PageData } = $props();
 	const READ_STORAGE_KEY = 'hnrss:read-story-ids';
 	const SAVED_STORAGE_KEY = 'hnrss:saved-story-ids';
 	const QUEUE_SIZE = 3;
+	const PREFERENCE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 	let readStoryIds = $state<string[]>([]);
 	let savedStoryIds = $state<string[]>([]);
 	let activeStoryIndex = $state(0);
 	let hasHydratedStoryState = false;
+	let hasHydratedPreferences = false;
+	let selectedTimeRange = $state<TimeRange>(props.data.timeRange);
+	let selectedSortMode = $state<SortMode>(props.data.sortMode);
+	let hideReadStories = $state<boolean>(props.data.hideRead);
 
 	const timeRanges: Array<{ value: TimeRange; label: string }> = [
 		{ value: '24h', label: 'Last 24 Hours' },
 		{ value: '7d', label: 'Last 7 Days' },
 		{ value: '30d', label: 'Last 30 Days' }
 	];
+	const sortModeLabels: Record<SortMode, string> = {
+		top: 'Top',
+		new: 'Newest',
+		comments: 'Most Commented'
+	};
+	const sortModes: Array<{ value: SortMode; label: string }> = SORT_MODES.map((mode) => ({
+		value: mode,
+		label: sortModeLabels[mode]
+	}));
 
 	function parseStoredIds(value: string | null): string[] {
 		if (!value) return [];
@@ -71,6 +96,83 @@
 		return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(getStoryDomain(story))}&sz=32`;
 	}
 
+	function sortStories(stories: HNStory[], sortMode: SortMode): HNStory[] {
+		const sortedStories = [...stories];
+
+		if (sortMode === 'new') {
+			return sortedStories.sort((a, b) => b.created_at_i - a.created_at_i || b.points - a.points);
+		}
+
+		if (sortMode === 'comments') {
+			return sortedStories.sort((a, b) => b.num_comments - a.num_comments || b.points - a.points);
+		}
+
+		return sortedStories.sort((a, b) => b.points - a.points || b.created_at_i - a.created_at_i);
+	}
+
+	function getQueryForPreferences(
+		timeRange: TimeRange,
+		sortMode: SortMode,
+		hideRead: boolean
+	): string {
+		const params = new URLSearchParams();
+		params.set('range', timeRange);
+		params.set('sort', sortMode);
+		if (hideRead) {
+			params.set('hideRead', '1');
+		}
+		return params.toString();
+	}
+
+	function getRangeHref(timeRange: TimeRange): string {
+		const query = getQueryForPreferences(timeRange, selectedSortMode, hideReadStories);
+		return `${resolve('/')}?${query}`;
+	}
+
+	function persistPreferenceState(): void {
+		localStorage.setItem(PREFERENCE_STORAGE_KEYS.range, selectedTimeRange);
+		localStorage.setItem(PREFERENCE_STORAGE_KEYS.sortMode, selectedSortMode);
+		localStorage.setItem(PREFERENCE_STORAGE_KEYS.hideRead, encodeHideReadPreference(hideReadStories));
+
+		document.cookie = `${PREFERENCE_COOKIE_KEYS.range}=${selectedTimeRange}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+		document.cookie = `${PREFERENCE_COOKIE_KEYS.sortMode}=${selectedSortMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+		document.cookie = `${PREFERENCE_COOKIE_KEYS.hideRead}=${encodeHideReadPreference(hideReadStories)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+	}
+
+	function replacePreferenceQueryWithoutReload(): void {
+		const nextUrl = new URL(window.location.href);
+		const query = getQueryForPreferences(selectedTimeRange, selectedSortMode, hideReadStories);
+		nextUrl.search = query;
+		history.replaceState(history.state, '', nextUrl);
+	}
+
+	async function selectTimeRange(timeRange: TimeRange): Promise<void> {
+		if (timeRange === selectedTimeRange) return;
+
+		selectedTimeRange = timeRange;
+		await goto(getRangeHref(timeRange), {
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+
+	function selectSortMode(sortMode: SortMode): void {
+		if (sortMode === selectedSortMode) return;
+		selectedSortMode = sortMode;
+		activeStoryIndex = 0;
+		if (!browser || !hasHydratedPreferences) return;
+
+		replacePreferenceQueryWithoutReload();
+	}
+
+	function toggleHideRead(): void {
+		hideReadStories = !hideReadStories;
+		activeStoryIndex = 0;
+		if (!browser || !hasHydratedPreferences) return;
+
+		replacePreferenceQueryWithoutReload();
+	}
+
 	function skipStory(storyId: string): void {
 		markStoryRead(storyId);
 	}
@@ -79,19 +181,25 @@
 		return `story-${storyId}`;
 	}
 
+	let displayedStories = $derived.by(() => {
+		const sortedStories = sortStories(props.data.stories, selectedSortMode);
+		if (!hideReadStories) return sortedStories;
+		return sortedStories.filter((story) => !isStoryRead(story.objectID));
+	});
+
 	function getActiveStory(): HNStory | undefined {
-		return props.data.stories[activeStoryIndex];
+		return displayedStories[activeStoryIndex];
 	}
 
 	function setActiveStoryIndex(index: number): void {
-		if (props.data.stories.length === 0) {
+		if (displayedStories.length === 0) {
 			activeStoryIndex = 0;
 			return;
 		}
 
-		const nextIndex = Math.max(0, Math.min(index, props.data.stories.length - 1));
+		const nextIndex = Math.max(0, Math.min(index, displayedStories.length - 1));
 		activeStoryIndex = nextIndex;
-		const nextStory = props.data.stories[nextIndex];
+		const nextStory = displayedStories[nextIndex];
 		const nextElement = document.getElementById(getStoryElementId(nextStory.objectID));
 		nextElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 	}
@@ -149,8 +257,8 @@
 		}
 	}
 
-	function getQueueStories() {
-		return props.data.stories.slice(0, QUEUE_SIZE);
+	function getQueueStories(stories: HNStory[]) {
+		return stories.slice(0, QUEUE_SIZE);
 	}
 
 	function formatTime(timestamp: number): string {
@@ -182,9 +290,58 @@
 	});
 
 	$effect(() => {
+		selectedTimeRange = props.data.timeRange;
+		selectedSortMode = props.data.sortMode;
+		hideReadStories = props.data.hideRead;
+	});
+
+	$effect(() => {
+		if (!browser || hasHydratedPreferences) return;
+
+		const searchParams = new URLSearchParams(window.location.search);
+		const storedRange = localStorage.getItem(PREFERENCE_STORAGE_KEYS.range);
+		const storedSortMode = localStorage.getItem(PREFERENCE_STORAGE_KEYS.sortMode);
+		const storedHideRead = localStorage.getItem(PREFERENCE_STORAGE_KEYS.hideRead);
+
+		let shouldNavigate = false;
+		if (!searchParams.has('range') && isPreferredRange(storedRange) && storedRange !== selectedTimeRange) {
+			selectedTimeRange = storedRange;
+			shouldNavigate = true;
+		}
+
+		if (!searchParams.has('sort') && isSortMode(storedSortMode)) {
+			selectedSortMode = storedSortMode;
+		}
+
+		const parsedStoredHideRead = parseHideReadPreference(storedHideRead);
+		if (!searchParams.has('hideRead') && parsedStoredHideRead !== null) {
+			hideReadStories = parsedStoredHideRead;
+		}
+
+		hasHydratedPreferences = true;
+		persistPreferenceState();
+
+		if (shouldNavigate) {
+			void goto(getRangeHref(selectedTimeRange), {
+				keepFocus: true,
+				noScroll: true,
+				replaceState: true
+			});
+			return;
+		}
+
+		replacePreferenceQueryWithoutReload();
+	});
+
+	$effect(() => {
+		if (!browser || !hasHydratedPreferences) return;
+		persistPreferenceState();
+	});
+
+	$effect(() => {
 		if (!browser) return;
 
-		const maxIndex = Math.max(0, props.data.stories.length - 1);
+		const maxIndex = Math.max(0, displayedStories.length - 1);
 		if (activeStoryIndex > maxIndex) {
 			activeStoryIndex = maxIndex;
 		}
@@ -204,14 +361,41 @@
 		<div class="time-range-selector">
 			{#each timeRanges as range (range.value)}
 				<a
-					href={resolve('/') + '?range=' + range.value}
+					href={getRangeHref(range.value)}
 					class="range-btn"
-					class:active={props.data.timeRange === range.value}
+					class:active={selectedTimeRange === range.value}
 					data-sveltekit-noscroll
+					onclick={(event) => {
+						event.preventDefault();
+						void selectTimeRange(range.value);
+					}}
 				>
 					{range.label}
 				</a>
 			{/each}
+		</div>
+		<div class="preference-controls">
+			<div class="sort-selector" role="group" aria-label="Sort stories">
+				{#each sortModes as mode (mode.value)}
+					<button
+						type="button"
+						class="sort-btn"
+						class:active={selectedSortMode === mode.value}
+						onclick={() => selectSortMode(mode.value)}
+					>
+						{mode.label}
+					</button>
+				{/each}
+			</div>
+			<button
+				type="button"
+				class="hide-read-toggle"
+				class:active={hideReadStories}
+				aria-pressed={hideReadStories}
+				onclick={toggleHideRead}
+			>
+				{hideReadStories ? 'Unread only' : 'Show read'}
+			</button>
 		</div>
 		<p class="keyboard-hint">Keyboard: j/k navigate • o open • s save • m mark read</p>
 	</header>
@@ -224,7 +408,10 @@
 		{#if props.data.stories.length === 0}
 			<p class="no-stories">No stories found in this time range.</p>
 		{:else}
-			{@const queueStories = getQueueStories()}
+			{#if displayedStories.length === 0}
+				<p class="no-stories">No stories match these filters.</p>
+			{:else}
+				{@const queueStories = getQueueStories(displayedStories)}
 			{@const queueReadCount = queueStories.filter((story) => isStoryRead(story.objectID)).length}
 			{@const queueProgress =
 				queueStories.length > 0 ? Math.round((queueReadCount / queueStories.length) * 100) : 0}
@@ -249,25 +436,14 @@
 						<li class="queue-item" class:read={isStoryRead(story.objectID)}>
 							<span class="queue-rank">#{index + 1}</span>
 							<div class="queue-story">
-								{#if story.url}
-									<a
-										href={story.url}
-										target="_blank"
-										rel="external noopener noreferrer"
-										onclick={() => markStoryRead(story.objectID)}
-									>
-										{story.title}
-									</a>
-								{:else}
-									<a
-										href="https://news.ycombinator.com/item?id={story.objectID}"
-										target="_blank"
-										rel="external noopener noreferrer"
-										onclick={() => markStoryRead(story.objectID)}
-									>
-										{story.title}
-									</a>
-								{/if}
+								<a
+									href={getStoryHref(story)}
+									target="_blank"
+									rel="external noopener noreferrer"
+									onclick={() => markStoryRead(story.objectID)}
+								>
+									{story.title}
+								</a>
 								<span>{story.points} points • {formatTime(story.created_at_i)}</span>
 							</div>
 						</li>
@@ -276,7 +452,7 @@
 			</section>
 
 			<ol class="story-list">
-				{#each props.data.stories as story, index (story.objectID)}
+				{#each displayedStories as story, index (story.objectID)}
 					{@const storyDomain = getStoryDomain(story)}
 					<li
 						id={getStoryElementId(story.objectID)}
@@ -360,6 +536,7 @@
 					</li>
 				{/each}
 			</ol>
+			{/if}
 		{/if}
 	</main>
 </div>
@@ -411,6 +588,51 @@
 		background: #ff6600;
 		color: white;
 		border-color: #ff6600;
+	}
+
+	.preference-controls {
+		margin-top: 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.sort-selector {
+		display: inline-flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
+	.sort-btn,
+	.hide-read-toggle {
+		padding: 0.38rem 0.7rem;
+		border: 1px solid #dddddd;
+		border-radius: 999px;
+		background: white;
+		color: #4f4f4f;
+		font-size: 0.8rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.sort-btn:hover,
+	.hide-read-toggle:hover {
+		border-color: #cfcfcf;
+		background: #f8f8f8;
+	}
+
+	.sort-btn.active {
+		border-color: #ffbf94;
+		background: #fff3eb;
+		color: #bb4f00;
+	}
+
+	.hide-read-toggle.active {
+		border-color: #ffbf94;
+		background: #fff3eb;
+		color: #bb4f00;
 	}
 
 	.story-list {
@@ -762,6 +984,10 @@
 			font-size: 0.8rem;
 			border-width: 1px;
 			border-radius: 5px;
+		}
+
+		.preference-controls {
+			margin-top: 0.55rem;
 		}
 
 		.story-item {
