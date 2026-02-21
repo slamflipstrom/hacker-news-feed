@@ -96,20 +96,18 @@ src/
 
 ### Svelte MCP (when available in the current session)
 
-If the Svelte MCP server is available, use it for Svelte/SvelteKit documentation and autofix workflows.
+You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here’s how to use the available tools effectively:
 
-#### 1. `list-sections`
+Available Svelte MCP Tools:
 
-Use first to discover documentation sections and relevant paths.
+1. list-sections
+   Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths. When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
 
-#### 2. `get-documentation`
+2. get-documentation
+   Retrieves full documentation content for specific sections. Accepts single or multiple sections. After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user’s task.
 
-Fetch all relevant sections after reviewing `list-sections` output.
+3. svelte-autofixer
+   Analyzes Svelte code and returns issues and suggestions. You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
 
-#### 3. `svelte-autofixer`
-
-Run when editing Svelte files; iterate until no actionable issues remain.
-
-#### 4. `playground-link`
-
-Only generate after user asks for it, and not when code was written directly to project files.
+4. playground-link
+   Generates a Svelte Playground link with the provided code. After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
