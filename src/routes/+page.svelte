@@ -56,6 +56,20 @@
 		return story.url ?? `https://news.ycombinator.com/item?id=${story.objectID}`;
 	}
 
+	function getStoryDomain(story: HNStory): string {
+		if (!story.url) return 'news.ycombinator.com';
+
+		try {
+			return new URL(story.url).hostname.replace(/^www\./, '');
+		} catch {
+			return 'news.ycombinator.com';
+		}
+	}
+
+	function getStoryFaviconUrl(story: HNStory): string {
+		return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(getStoryDomain(story))}&sz=32`;
+	}
+
 	function skipStory(storyId: string): void {
 		markStoryRead(storyId);
 	}
@@ -171,19 +185,33 @@
 
 			<ol class="story-list">
 				{#each props.data.stories as story, index (story.objectID)}
+					{@const storyDomain = getStoryDomain(story)}
 					<li class="story-item" class:read={isStoryRead(story.objectID)}>
 						<div class="rank">#{index + 1}</div>
 						<div class="story-content">
-							<h2>
-								<a
-									href={getStoryHref(story)}
-									target="_blank"
-									rel="external noopener noreferrer"
-									onclick={() => markStoryRead(story.objectID)}
-								>
-									{story.title}
-								</a>
-							</h2>
+							<div class="story-title-row">
+								<h2 class="story-title">
+									<a
+										href={getStoryHref(story)}
+										target="_blank"
+										rel="external noopener noreferrer"
+										onclick={() => markStoryRead(story.objectID)}
+									>
+										{story.title}
+									</a>
+								</h2>
+								<span class="story-domain">
+									<img
+										src={getStoryFaviconUrl(story)}
+										alt=""
+										loading="lazy"
+										decoding="async"
+										width="16"
+										height="16"
+									/>
+									{storyDomain}
+								</span>
+							</div>
 							<div class="story-actions">
 								<a
 									href={getStoryHref(story)}
@@ -211,22 +239,25 @@
 								</button>
 							</div>
 							<div class="story-meta">
+								<div class="story-meta-badges">
+									<span class="meta-badge meta-badge-score">{story.points} pts</span>
+									<a
+										href="https://news.ycombinator.com/item?id={story.objectID}"
+										target="_blank"
+										rel="external noopener noreferrer"
+										class="meta-badge meta-badge-comments"
+									>
+										{story.num_comments || 0} comments
+									</a>
+									<span class="meta-badge meta-badge-age">{formatTime(story.created_at_i)}</span>
+								</div>
+								<span class="story-author">by {story.author}</span>
 								{#if isStoryRead(story.objectID)}
 									<span class="status-badge status-read">Read</span>
 								{/if}
 								{#if isStorySaved(story.objectID)}
 									<span class="status-badge status-saved">Saved</span>
 								{/if}
-								<span class="score">{story.points} points</span>
-								<span>by {story.author}</span>
-								<span>{formatTime(story.created_at_i)}</span>
-								<a
-									href="https://news.ycombinator.com/item?id={story.objectID}"
-									target="_blank"
-									rel="external noopener noreferrer"
-								>
-									{story.num_comments || 0} comments
-								</a>
 							</div>
 						</div>
 					</li>
@@ -420,19 +451,47 @@
 		flex: 1;
 	}
 
-	h2 {
-		font-size: 1.25rem;
-		margin: 0 0 0.5rem 0;
-		font-weight: 600;
+	.story-title-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		justify-content: space-between;
+		margin: 0 0 0.65rem 0;
 	}
 
-	h2 a {
+	.story-title {
+		font-size: 1.34rem;
+		margin: 0;
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
+	.story-title a {
 		color: #333;
 		text-decoration: none;
 	}
 
-	h2 a:hover {
+	.story-title a:hover {
 		color: #ff6600;
+	}
+
+	.story-domain {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.2rem 0.55rem;
+		border-radius: 999px;
+		background: #f6f6f6;
+		border: 1px solid #ececec;
+		color: #565656;
+		font-size: 0.76rem;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.story-domain img {
+		flex-shrink: 0;
+		border-radius: 2px;
 	}
 
 	.story-actions {
@@ -490,10 +549,51 @@
 
 	.story-meta {
 		display: flex;
-		gap: 1rem;
-		font-size: 0.875rem;
-		color: #666;
+		align-items: center;
+		gap: 0.55rem;
 		flex-wrap: wrap;
+	}
+
+	.story-meta-badges {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		flex-wrap: wrap;
+	}
+
+	.meta-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.2rem 0.5rem;
+		border-radius: 999px;
+		font-size: 0.74rem;
+		font-weight: 600;
+		line-height: 1;
+		border: 1px solid #e6e6e6;
+		background: #fff;
+		color: #555;
+		text-decoration: none;
+	}
+
+	.meta-badge-score {
+		background: #fff3eb;
+		border-color: #ffd8bf;
+		color: #c25100;
+	}
+
+	.meta-badge-comments:hover {
+		border-color: #cfcfcf;
+		background: #f8f8f8;
+		color: #383838;
+	}
+
+	.meta-badge-age {
+		color: #666;
+	}
+
+	.story-author {
+		font-size: 0.8rem;
+		color: #8a8a8a;
 	}
 
 	.status-badge {
@@ -513,20 +613,6 @@
 	.status-saved {
 		background: #fff0e5;
 		color: #cc5a00;
-	}
-
-	.score {
-		color: #ff6600;
-		font-weight: 600;
-	}
-
-	.story-meta a {
-		color: #666;
-		text-decoration: none;
-	}
-
-	.story-meta a:hover {
-		color: #ff6600;
 	}
 
 	.error-message {
@@ -568,6 +654,11 @@
 		.story-item {
 			flex-direction: column;
 			gap: 0.5rem;
+		}
+
+		.story-title-row {
+			flex-direction: column;
+			gap: 0.45rem;
 		}
 
 		.rank {
