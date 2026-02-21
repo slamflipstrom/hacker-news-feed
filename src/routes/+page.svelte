@@ -7,6 +7,7 @@
 	const props: { data: PageData } = $props();
 	const READ_STORAGE_KEY = 'hnrss:read-story-ids';
 	const SAVED_STORAGE_KEY = 'hnrss:saved-story-ids';
+	const QUEUE_SIZE = 3;
 	let readStoryIds = $state<string[]>([]);
 	let savedStoryIds = $state<string[]>([]);
 	let hasHydratedStoryState = false;
@@ -40,6 +41,10 @@
 	function markStoryRead(storyId: string): void {
 		if (isStoryRead(storyId)) return;
 		readStoryIds = [...readStoryIds, storyId];
+	}
+
+	function getQueueStories() {
+		return props.data.stories.slice(0, QUEUE_SIZE);
 	}
 
 	function formatTime(timestamp: number): string {
@@ -96,6 +101,57 @@
 		{#if props.data.stories.length === 0}
 			<p class="no-stories">No stories found in this time range.</p>
 		{:else}
+			{@const queueStories = getQueueStories()}
+			{@const queueReadCount = queueStories.filter((story) => isStoryRead(story.objectID)).length}
+			{@const queueProgress =
+				queueStories.length > 0 ? Math.round((queueReadCount / queueStories.length) * 100) : 0}
+
+			<section class="queue-section" aria-label="Today's queue">
+				<div class="queue-header">
+					<h2 class="queue-title">Today&apos;s Queue</h2>
+					<p class="queue-progress-label">{queueReadCount}/{queueStories.length} read</p>
+				</div>
+				<div
+					class="queue-progress-track"
+					role="progressbar"
+					aria-label="Queue progress"
+					aria-valuemin="0"
+					aria-valuemax={queueStories.length}
+					aria-valuenow={queueReadCount}
+				>
+					<div class="queue-progress-fill" style={`width: ${queueProgress}%`}></div>
+				</div>
+				<ol class="queue-list">
+					{#each queueStories as story, index (story.objectID)}
+						<li class="queue-item" class:read={isStoryRead(story.objectID)}>
+							<span class="queue-rank">#{index + 1}</span>
+							<div class="queue-story">
+								{#if story.url}
+									<a
+										href={story.url}
+										target="_blank"
+										rel="external noopener noreferrer"
+										onclick={() => markStoryRead(story.objectID)}
+									>
+										{story.title}
+									</a>
+								{:else}
+									<a
+										href="https://news.ycombinator.com/item?id={story.objectID}"
+										target="_blank"
+										rel="external noopener noreferrer"
+										onclick={() => markStoryRead(story.objectID)}
+									>
+										{story.title}
+									</a>
+								{/if}
+								<span>{story.points} points • {formatTime(story.created_at_i)}</span>
+							</div>
+						</li>
+					{/each}
+				</ol>
+			</section>
+
 			<ol class="story-list">
 				{#each props.data.stories as story, index (story.objectID)}
 					<li class="story-item" class:read={isStoryRead(story.objectID)}>
@@ -201,6 +257,99 @@
 		list-style: none;
 		padding: 0;
 		margin: 0;
+	}
+
+	.queue-section {
+		padding: 1rem;
+		margin-bottom: 1.25rem;
+		border-radius: 10px;
+		border: 1px solid #ffe1cc;
+		background: linear-gradient(180deg, #fff8f3 0%, #fff 100%);
+	}
+
+	.queue-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.6rem;
+	}
+
+	.queue-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 700;
+		color: #a64500;
+	}
+
+	.queue-progress-label {
+		margin: 0;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #99521d;
+	}
+
+	.queue-progress-track {
+		height: 0.5rem;
+		border-radius: 999px;
+		background: #ffe7d6;
+		overflow: hidden;
+		margin-bottom: 0.9rem;
+	}
+
+	.queue-progress-fill {
+		height: 100%;
+		background: linear-gradient(90deg, #ff8a3d 0%, #ff6600 100%);
+		transition: width 0.25s ease-out;
+	}
+
+	.queue-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	.queue-item {
+		display: flex;
+		gap: 0.75rem;
+		padding: 0.65rem 0.75rem;
+		border-radius: 8px;
+		background: #ffffff;
+		border: 1px solid #f3d8c6;
+	}
+
+	.queue-item.read {
+		opacity: 0.68;
+	}
+
+	.queue-rank {
+		min-width: 2.4rem;
+		font-size: 0.82rem;
+		font-weight: 700;
+		color: #ab6a3f;
+	}
+
+	.queue-story {
+		display: grid;
+		gap: 0.2rem;
+	}
+
+	.queue-story a {
+		color: #2d2d2d;
+		text-decoration: none;
+		font-weight: 600;
+		line-height: 1.25;
+	}
+
+	.queue-story a:hover {
+		color: #cc5a00;
+	}
+
+	.queue-story span {
+		font-size: 0.8rem;
+		color: #7c5f4a;
 	}
 
 	.story-item {
@@ -337,6 +486,20 @@
 		}
 
 		.rank {
+			min-width: auto;
+		}
+
+		.queue-header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.queue-item {
+			flex-direction: column;
+			gap: 0.35rem;
+		}
+
+		.queue-rank {
 			min-width: auto;
 		}
 	}
