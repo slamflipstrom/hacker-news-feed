@@ -247,7 +247,7 @@
 		const activeStory = getActiveStory();
 		if (!activeStory) return;
 
-		if (key === 'o') {
+		if (key === 'o' || key === 'enter') {
 			event.preventDefault();
 			openStory(activeStory);
 			return;
@@ -361,13 +361,9 @@
 		}
 	});
 
-	$effect(() => {
-		if (!browser) return;
-
-		window.addEventListener('keydown', handleKeyboardShortcuts);
-		return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
-	});
 </script>
+
+<svelte:window onkeydown={handleKeyboardShortcuts} />
 
 <div class="container">
 	<header>
@@ -411,7 +407,7 @@
 				{hideReadStories ? 'Unread only' : 'Show read'}
 			</button>
 		</div>
-		<p class="keyboard-hint">Keyboard: j/k navigate • o open • c comments • s save • m mark read</p>
+		<p class="keyboard-hint">Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read</p>
 	</header>
 
 	<main>
@@ -443,7 +439,7 @@
 					aria-valuemax={queueStories.length}
 					aria-valuenow={queueReadCount}
 				>
-					<div class="queue-progress-fill" style={`width: ${queueProgress}%`}></div>
+					<div class="queue-progress-fill" style:width="{queueProgress}%"></div>
 				</div>
 				<ol class="queue-list">
 					{#each queueStories as story, index (story.objectID)}
