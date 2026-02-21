@@ -10,6 +10,7 @@
 	const QUEUE_SIZE = 3;
 	let readStoryIds = $state<string[]>([]);
 	let savedStoryIds = $state<string[]>([]);
+	let activeStoryIndex = $state(0);
 	let hasHydratedStoryState = false;
 
 	const timeRanges: Array<{ value: TimeRange; label: string }> = [
@@ -74,6 +75,80 @@
 		markStoryRead(storyId);
 	}
 
+	function getStoryElementId(storyId: string): string {
+		return `story-${storyId}`;
+	}
+
+	function getActiveStory(): HNStory | undefined {
+		return props.data.stories[activeStoryIndex];
+	}
+
+	function setActiveStoryIndex(index: number): void {
+		if (props.data.stories.length === 0) {
+			activeStoryIndex = 0;
+			return;
+		}
+
+		const nextIndex = Math.max(0, Math.min(index, props.data.stories.length - 1));
+		activeStoryIndex = nextIndex;
+		const nextStory = props.data.stories[nextIndex];
+		const nextElement = document.getElementById(getStoryElementId(nextStory.objectID));
+		nextElement?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+	}
+
+	function openStory(story: HNStory): void {
+		markStoryRead(story.objectID);
+		window.open(getStoryHref(story), '_blank', 'noopener,noreferrer');
+	}
+
+	function handleKeyboardShortcuts(event: KeyboardEvent): void {
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+		const target = event.target as HTMLElement | null;
+		const tagName = target?.tagName;
+		if (
+			target?.isContentEditable ||
+			tagName === 'INPUT' ||
+			tagName === 'TEXTAREA' ||
+			tagName === 'SELECT'
+		) {
+			return;
+		}
+
+		const key = event.key.toLowerCase();
+		if (key === 'j') {
+			event.preventDefault();
+			setActiveStoryIndex(activeStoryIndex + 1);
+			return;
+		}
+
+		if (key === 'k') {
+			event.preventDefault();
+			setActiveStoryIndex(activeStoryIndex - 1);
+			return;
+		}
+
+		const activeStory = getActiveStory();
+		if (!activeStory) return;
+
+		if (key === 'o') {
+			event.preventDefault();
+			openStory(activeStory);
+			return;
+		}
+
+		if (key === 's') {
+			event.preventDefault();
+			toggleStorySaved(activeStory.objectID);
+			return;
+		}
+
+		if (key === 'm') {
+			event.preventDefault();
+			markStoryRead(activeStory.objectID);
+		}
+	}
+
 	function getQueueStories() {
 		return props.data.stories.slice(0, QUEUE_SIZE);
 	}
@@ -105,6 +180,22 @@
 		localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readStoryIds));
 		localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(savedStoryIds));
 	});
+
+	$effect(() => {
+		if (!browser) return;
+
+		const maxIndex = Math.max(0, props.data.stories.length - 1);
+		if (activeStoryIndex > maxIndex) {
+			activeStoryIndex = maxIndex;
+		}
+	});
+
+	$effect(() => {
+		if (!browser) return;
+
+		window.addEventListener('keydown', handleKeyboardShortcuts);
+		return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
+	});
 </script>
 
 <div class="container">
@@ -122,6 +213,7 @@
 				</a>
 			{/each}
 		</div>
+		<p class="keyboard-hint">Keyboard: j/k navigate • o open • s save • m mark read</p>
 	</header>
 
 	<main>
@@ -186,7 +278,12 @@
 			<ol class="story-list">
 				{#each props.data.stories as story, index (story.objectID)}
 					{@const storyDomain = getStoryDomain(story)}
-					<li class="story-item" class:read={isStoryRead(story.objectID)}>
+					<li
+						id={getStoryElementId(story.objectID)}
+						class="story-item"
+						class:read={isStoryRead(story.objectID)}
+						class:active={index === activeStoryIndex}
+					>
 						<div class="rank">#{index + 1}</div>
 						<div class="story-content">
 							<div class="story-title-row">
@@ -322,6 +419,12 @@
 		margin: 0;
 	}
 
+	.keyboard-hint {
+		margin: 0.75rem 0 0;
+		font-size: 0.78rem;
+		color: #7b7b7b;
+	}
+
 	.queue-section {
 		padding: 1rem;
 		margin-bottom: 1.25rem;
@@ -430,10 +533,20 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
+	.story-item.active {
+		border-color: #ffba8a;
+		box-shadow: 0 0 0 2px #ffe7d3;
+	}
+
 	.story-item.read {
 		background: #fafafa;
 		border-color: #ececec;
 		opacity: 0.72;
+	}
+
+	.story-item.read.active {
+		border-color: #ffd3b4;
+		box-shadow: 0 0 0 2px #ffefe4;
 	}
 
 	.story-item.read:hover {
