@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import type { TimeRange } from '$lib/hn-client';
+	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
@@ -41,6 +41,23 @@
 	function markStoryRead(storyId: string): void {
 		if (isStoryRead(storyId)) return;
 		readStoryIds = [...readStoryIds, storyId];
+	}
+
+	function toggleStorySaved(storyId: string): void {
+		if (isStorySaved(storyId)) {
+			savedStoryIds = savedStoryIds.filter((id) => id !== storyId);
+			return;
+		}
+
+		savedStoryIds = [...savedStoryIds, storyId];
+	}
+
+	function getStoryHref(story: HNStory): string {
+		return story.url ?? `https://news.ycombinator.com/item?id=${story.objectID}`;
+	}
+
+	function skipStory(storyId: string): void {
+		markStoryRead(storyId);
 	}
 
 	function getQueueStories() {
@@ -158,26 +175,41 @@
 						<div class="rank">#{index + 1}</div>
 						<div class="story-content">
 							<h2>
-								{#if story.url}
-									<a
-										href={story.url}
-										target="_blank"
-										rel="external noopener noreferrer"
-										onclick={() => markStoryRead(story.objectID)}
-									>
-										{story.title}
-									</a>
-								{:else}
-									<a
-										href="https://news.ycombinator.com/item?id={story.objectID}"
-										target="_blank"
-										rel="external noopener noreferrer"
-										onclick={() => markStoryRead(story.objectID)}
-									>
-										{story.title}
-									</a>
-								{/if}
+								<a
+									href={getStoryHref(story)}
+									target="_blank"
+									rel="external noopener noreferrer"
+									onclick={() => markStoryRead(story.objectID)}
+								>
+									{story.title}
+								</a>
 							</h2>
+							<div class="story-actions">
+								<a
+									href={getStoryHref(story)}
+									target="_blank"
+									rel="external noopener noreferrer"
+									class="story-action story-action-open"
+									onclick={() => markStoryRead(story.objectID)}
+								>
+									Open
+								</a>
+								<button
+									type="button"
+									class="story-action story-action-save"
+									aria-pressed={isStorySaved(story.objectID)}
+									onclick={() => toggleStorySaved(story.objectID)}
+								>
+									{isStorySaved(story.objectID) ? 'Saved' : 'Save'}
+								</button>
+								<button
+									type="button"
+									class="story-action story-action-skip"
+									onclick={() => skipStory(story.objectID)}
+								>
+									Skip
+								</button>
+							</div>
 							<div class="story-meta">
 								{#if isStoryRead(story.objectID)}
 									<span class="status-badge status-read">Read</span>
@@ -401,6 +433,59 @@
 
 	h2 a:hover {
 		color: #ff6600;
+	}
+
+	.story-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.65rem;
+	}
+
+	.story-action {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.35rem 0.65rem;
+		border-radius: 999px;
+		border: 1px solid #e2e2e2;
+		background: #fff;
+		color: #444;
+		font-size: 0.78rem;
+		font-weight: 600;
+		line-height: 1;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	button.story-action {
+		font-family: inherit;
+	}
+
+	.story-action:hover {
+		border-color: #cfcfcf;
+		background: #f8f8f8;
+	}
+
+	.story-action-open {
+		border-color: #ffcfab;
+		color: #c25100;
+		background: #fff5ef;
+	}
+
+	.story-action-open:hover {
+		border-color: #ffb982;
+		background: #ffefe4;
+	}
+
+	.story-action-save[aria-pressed='true'] {
+		border-color: #ffbe8f;
+		background: #fff1e6;
+		color: #bb4f00;
+	}
+
+	.story-action-skip {
+		color: #666;
 	}
 
 	.story-meta {
