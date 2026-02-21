@@ -67,36 +67,12 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
     sameSite: "lax",
   });
 
-  console.log("[PageServer] Loading stories", {
-    requestedRange: rawRange,
-    resolvedRange: timeRange,
-    requestedSortMode: rawSortMode,
-    resolvedSortMode,
-    requestedHideRead: rawHideRead,
-    resolvedHideRead,
-    isDefault: !rawRange,
-    invalidRange: rawRange !== null && !isTimeRange(rawRange),
-    invalidSortMode: rawSortMode !== null && !isSortMode(rawSortMode),
-    invalidHideRead:
-      rawHideRead !== null && parseHideReadPreference(rawHideRead) === null,
-  });
-
   try {
     const stories = await getStoriesInTimeRange(timeRange, STORIES_LIMIT);
     const maxAge = CACHE_SECONDS[timeRange];
 
     setHeaders({
       "Cache-Control": `public, max-age=${maxAge}, stale-while-revalidate=60`,
-    });
-
-    const duration = Date.now() - startTime;
-    console.log("[PageServer] Page loaded successfully", {
-      timeRange,
-      sortMode: resolvedSortMode,
-      hideRead: resolvedHideRead,
-      storiesCount: stories.length,
-      cacheTTL: maxAge,
-      durationMs: duration,
     });
 
     return {

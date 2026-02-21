@@ -24,6 +24,8 @@ const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
 
 interface AlgoliaResponse {
   hits: HNStory[];
+  page: number;
+  nbPages: number;
 }
 
 export function isTimeRange(value: string | null): value is TimeRange {
@@ -90,52 +92,41 @@ export async function getStoriesInTimeRange(
   timeRange: TimeRange,
   limit: number = 10
 ): Promise<HNStory[]> {
-  const startTime = Date.now();
   const now = Math.floor(Date.now() / 1000);
   const timeLimit = now - TIME_RANGE_SECONDS[timeRange];
 
-  // Fetch more results than needed to ensure we get the highest-scored stories.
-  const fetchLimit = Math.min(limit * 10, 1000);
+  // Pull multiple pages to improve top-score accuracy across larger ranges.
+  const hitsPerPage = 200;
+  const maxPagesToFetch = 5;
+  const allHits: HNStory[] = [];
 
-  const url = new URL(`${ALGOLIA_API_BASE}/search`);
-  url.searchParams.set("tags", "story");
-  url.searchParams.set("numericFilters", `created_at_i>${timeLimit},points>10`);
-  url.searchParams.set("hitsPerPage", fetchLimit.toString());
+  let pagesAvailable = 1;
+  for (let page = 0; page < maxPagesToFetch; page += 1) {
+    if (page >= pagesAvailable) {
+      break;
+    }
 
-  console.log("[HN-Client] Fetching stories", {
-    timeRange,
-    requestedLimit: limit,
-    fetchLimit,
-    minTimestamp: timeLimit,
-    url: url.toString(),
-  });
+    const url = new URL(`${ALGOLIA_API_BASE}/search`);
+    url.searchParams.set("tags", "story");
+    url.searchParams.set("numericFilters", `created_at_i>${timeLimit},points>10`);
+    url.searchParams.set("hitsPerPage", hitsPerPage.toString());
+    url.searchParams.set("page", page.toString());
 
-  try {
     const response = await fetchWithRetry(url.toString());
     const data: AlgoliaResponse = await response.json();
-
-    const sorted = data.hits
-      .filter((story) => story.title)
-      .sort((a, b) => b.points - a.points)
-      .slice(0, limit);
-
-    const duration = Date.now() - startTime;
-    console.log("[HN-Client] Stories fetched successfully", {
-      timeRange,
-      hitsReceived: data.hits.length,
-      hitsReturned: sorted.length,
-      topScore: sorted[0]?.points || 0,
-      durationMs: duration,
-    });
-
-    return sorted;
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error("[HN-Client] Error fetching stories", {
-      timeRange,
-      error: error instanceof Error ? error.message : String(error),
-      durationMs: duration,
-    });
-    throw error;
+    pagesAvailable = Math.max(data.nbPages, page + 1);
+    allHits.push(...data.hits);
   }
+
+  const dedupedStories = Array.from(
+    new Map(
+      allHits
+        .filter((story) => story.title)
+        .map((story) => [story.objectID, story] as const)
+    ).values()
+  );
+
+  return dedupedStories
+    .sort((a, b) => b.points - a.points)
+    .slice(0, limit);
 }
