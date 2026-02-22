@@ -7,6 +7,7 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+		// With Cloudflare bindings, update Platform to include env/cf/ctx/caches.
 	}
 }
 

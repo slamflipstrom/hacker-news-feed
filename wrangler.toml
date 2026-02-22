@@ -1,0 +1,4 @@
+name = "hn-rss"
+compatibility_date = "2026-02-22"
+compatibility_flags = ["nodejs_als"]
+pages_build_output_dir = ".svelte-kit/cloudflare"

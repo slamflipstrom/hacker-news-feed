@@ -25,6 +25,8 @@ Other useful commands:
 - `pnpm preview`
 - `pnpm test:e2e` (deterministic mock Algolia data)
 - `pnpm test:e2e:live` (opt-in real Algolia API)
+- `pnpm cf:build` (Cloudflare Pages build output)
+- `pnpm cf:preview` (local Cloudflare Pages runtime preview)
 
 ## How It Works
 
@@ -65,6 +67,56 @@ Keep live mode optional/manual for diagnostics:
 ```sh
 pnpm test:e2e:live
 ```
+
+## Cloudflare Deployment
+
+This project targets Cloudflare Pages + Functions via `@sveltejs/adapter-cloudflare`.
+
+### Why this adapter
+
+- Native Pages/Workers runtime compatibility
+- Edge-executed server routes (`+page.server.ts`) without Node server management
+- Consistent SvelteKit output directory for Cloudflare deploys: `.svelte-kit/cloudflare`
+
+### Local validation before deploy
+
+```sh
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test:e2e
+pnpm cf:build
+pnpm cf:preview
+```
+
+### Cloudflare Pages project settings
+
+- Framework preset: `SvelteKit`
+- Build command: `pnpm build`
+- Build output directory: `.svelte-kit/cloudflare`
+- Production branch: `main`
+- Node version: `20` or newer
+- Preview deploys: enabled for non-`main` branches
+
+### Cloudflare config in repo
+
+`wrangler.toml` is configured with:
+
+- `compatibility_date = "2026-02-22"`
+- `compatibility_flags = ["nodejs_als"]`
+- `pages_build_output_dir = ".svelte-kit/cloudflare"`
+
+### Custom domain and launch
+
+1. Add your domain to Cloudflare DNS.
+2. Attach that domain under Pages custom domains.
+3. Wait for SSL status to become active.
+4. Because this is first-time deployment, cut over directly after validation.
+
+### Post-launch checks
+
+- Confirm `Cache-Control` headers on SSR responses.
+- Verify preference cookies are set (`range`, `sort`, `hideRead`).
+- Enable Pages/Workers logs and alerts for elevated `5xx` rates.
 
 ## Query Params
 
