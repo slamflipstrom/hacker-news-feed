@@ -29,6 +29,7 @@
 	let selectedTimeRange = $state<TimeRange>(props.data.timeRange);
 	let selectedSortMode = $state<SortMode>(props.data.sortMode);
 	let hideReadStories = $state<boolean>(props.data.hideRead);
+	let showKeyboardShortcuts = $state(false);
 
 	const timeRanges: Array<{ value: TimeRange; label: string }> = [
 		{ value: '24h', label: 'Last 24 Hours' },
@@ -414,7 +415,19 @@
 				{hideReadStories ? 'Unread only' : 'Show read'}
 			</button>
 		</div>
-		<p class="keyboard-hint">Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read</p>
+		<p class="keyboard-shortcuts-toggle">
+			<button
+				type="button"
+				class="keyboard-shortcuts-link"
+				aria-expanded={showKeyboardShortcuts}
+				onclick={() => (showKeyboardShortcuts = !showKeyboardShortcuts)}
+			>
+				{showKeyboardShortcuts ? 'Hide keyboard shortcuts' : 'Keyboard shortcuts'}
+			</button>
+		</p>
+		{#if showKeyboardShortcuts}
+			<p class="keyboard-hint">Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read</p>
+		{/if}
 	</header>
 
 	<main>
@@ -658,8 +671,34 @@
 		margin: 0;
 	}
 
-	.keyboard-hint {
+	.keyboard-shortcuts-toggle {
 		margin: 0.75rem 0 0;
+	}
+
+	.keyboard-shortcuts-link {
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: #8f4a16;
+		font-size: 0.8rem;
+		font-weight: 600;
+		font-family: inherit;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.keyboard-shortcuts-link:hover {
+		color: #bb4f00;
+	}
+
+	.keyboard-shortcuts-link:focus-visible {
+		outline: 2px solid #ffbf94;
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+
+	.keyboard-hint {
+		margin: 0.35rem 0 0;
 		font-size: 0.78rem;
 		color: #7b7b7b;
 	}
