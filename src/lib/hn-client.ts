@@ -17,7 +17,10 @@ const TIME_RANGE_SECONDS: Record<TimeRange, number> = {
   "30d": 2592000,
 };
 
-const ALGOLIA_API_BASE = "https://hn.algolia.com/api/v1";
+const runtimeEnv = (
+  globalThis as typeof globalThis & { process?: { env?: Record<string, string | undefined> } }
+).process?.env;
+const ALGOLIA_API_BASE = runtimeEnv?.HN_API_BASE_URL ?? "https://hn.algolia.com/api/v1";
 const FETCH_TIMEOUT_MS = 8000;
 const FETCH_MAX_RETRIES = 2;
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);

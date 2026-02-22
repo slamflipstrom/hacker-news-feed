@@ -1,0 +1,364 @@
+{
+  "stories": [
+    {
+      "objectID": "story-0001",
+      "title": "Top Titan Systems",
+      "url": "https://example.com/top-titan-systems",
+      "points": 500,
+      "author": "alice",
+      "ageHours": 20,
+      "num_comments": 120
+    },
+    {
+      "objectID": "story-0002",
+      "title": "Fresh Flash Dispatch",
+      "url": "https://example.com/fresh-flash-dispatch",
+      "points": 480,
+      "author": "bob",
+      "ageHours": 1,
+      "num_comments": 60
+    },
+    {
+      "objectID": "story-0003",
+      "title": "Comment Storm Digest",
+      "url": "https://example.com/comment-storm-digest",
+      "points": 470,
+      "author": "carol",
+      "ageHours": 8,
+      "num_comments": 900
+    },
+    {
+      "objectID": "story-0004",
+      "title": "Build Graph Runtime",
+      "url": "https://example.com/build-graph-runtime",
+      "points": 460,
+      "author": "diana",
+      "ageHours": 2,
+      "num_comments": 85
+    },
+    {
+      "objectID": "story-0005",
+      "title": "Rusty Pipelines at Scale",
+      "url": "https://example.com/rusty-pipelines-scale",
+      "points": 450,
+      "author": "eric",
+      "ageHours": 3,
+      "num_comments": 110
+    },
+    {
+      "objectID": "story-0006",
+      "title": "WebAssembly in Production",
+      "url": "https://example.com/webassembly-production",
+      "points": 440,
+      "author": "fiona",
+      "ageHours": 4,
+      "num_comments": 140
+    },
+    {
+      "objectID": "story-0007",
+      "title": "Edge Caching Deep Dive",
+      "url": "https://example.com/edge-caching-deep-dive",
+      "points": 430,
+      "author": "george",
+      "ageHours": 5,
+      "num_comments": 90
+    },
+    {
+      "objectID": "story-0008",
+      "title": "Shipping Safer Migrations",
+      "url": "https://example.com/safer-migrations",
+      "points": 420,
+      "author": "hana",
+      "ageHours": 6,
+      "num_comments": 70
+    },
+    {
+      "objectID": "story-0009",
+      "title": "Cost Models for AI Inference",
+      "url": "https://example.com/cost-models-ai-inference",
+      "points": 410,
+      "author": "ian",
+      "ageHours": 7,
+      "num_comments": 65
+    },
+    {
+      "objectID": "story-0010",
+      "title": "Designing Readable CLIs",
+      "url": "https://example.com/designing-readable-clis",
+      "points": 400,
+      "author": "jade",
+      "ageHours": 9,
+      "num_comments": 200
+    },
+    {
+      "objectID": "story-0011",
+      "title": "Incident Review Playbook",
+      "url": "https://example.com/incident-review-playbook",
+      "points": 390,
+      "author": "kai",
+      "ageHours": 10,
+      "num_comments": 155
+    },
+    {
+      "objectID": "story-0012",
+      "title": "Zero Downtime Rollouts",
+      "url": "https://example.com/zero-downtime-rollouts",
+      "points": 380,
+      "author": "lina",
+      "ageHours": 11,
+      "num_comments": 75
+    },
+    {
+      "objectID": "story-0013",
+      "title": "Faster CI with Test Sharding",
+      "url": "https://example.com/faster-ci-test-sharding",
+      "points": 370,
+      "author": "mason",
+      "ageHours": 12,
+      "num_comments": 130
+    },
+    {
+      "objectID": "story-0014",
+      "title": "Better Feature Flags",
+      "url": "https://example.com/better-feature-flags",
+      "points": 360,
+      "author": "nina",
+      "ageHours": 13,
+      "num_comments": 95
+    },
+    {
+      "objectID": "story-0015",
+      "title": "High Signal Monitoring",
+      "url": "https://example.com/high-signal-monitoring",
+      "points": 350,
+      "author": "omar",
+      "ageHours": 14,
+      "num_comments": 160
+    },
+    {
+      "objectID": "story-0016",
+      "title": "Practical TypeScript Narrowing",
+      "url": "https://example.com/practical-typescript-narrowing",
+      "points": 340,
+      "author": "piper",
+      "ageHours": 15,
+      "num_comments": 45
+    },
+    {
+      "objectID": "story-0017",
+      "title": "Domain-Driven APIs",
+      "url": "https://example.com/domain-driven-apis",
+      "points": 330,
+      "author": "quinn",
+      "ageHours": 16,
+      "num_comments": 170
+    },
+    {
+      "objectID": "story-0018",
+      "title": "From Monolith to Modules",
+      "url": "https://example.com/monolith-to-modules",
+      "points": 320,
+      "author": "ravi",
+      "ageHours": 17,
+      "num_comments": 180
+    },
+    {
+      "objectID": "story-0019",
+      "title": "Query Planning for Humans",
+      "url": "https://example.com/query-planning-humans",
+      "points": 310,
+      "author": "sara",
+      "ageHours": 18,
+      "num_comments": 125
+    },
+    {
+      "objectID": "story-0020",
+      "title": "Debugging Distributed Queues",
+      "url": "https://example.com/debugging-distributed-queues",
+      "points": 300,
+      "author": "tariq",
+      "ageHours": 19,
+      "num_comments": 220
+    },
+    {
+      "objectID": "story-0021",
+      "title": "Modern Browser Internals",
+      "url": "https://example.com/modern-browser-internals",
+      "points": 290,
+      "author": "uma",
+      "ageHours": 21,
+      "num_comments": 80
+    },
+    {
+      "objectID": "story-0022",
+      "title": "Predictable Frontend State",
+      "url": "https://example.com/predictable-frontend-state",
+      "points": 280,
+      "author": "victor",
+      "ageHours": 22,
+      "num_comments": 150
+    },
+    {
+      "objectID": "story-0023",
+      "title": "How to Review Code Faster",
+      "url": "https://example.com/review-code-faster",
+      "points": 270,
+      "author": "wendy",
+      "ageHours": 23,
+      "num_comments": 210
+    },
+    {
+      "objectID": "story-0024",
+      "title": "Reliable Backfills in SQL",
+      "url": "https://example.com/reliable-backfills-sql",
+      "points": 260,
+      "author": "xavier",
+      "ageHours": 23.5,
+      "num_comments": 115
+    },
+    {
+      "objectID": "story-0025",
+      "title": "Load Testing with Confidence",
+      "url": "https://example.com/load-testing-confidence",
+      "points": 255,
+      "author": "yasmin",
+      "ageHours": 30,
+      "num_comments": 95
+    },
+    {
+      "objectID": "story-0026",
+      "title": "State Machines for UI",
+      "url": "https://example.com/state-machines-ui",
+      "points": 245,
+      "author": "zane",
+      "ageHours": 36,
+      "num_comments": 130
+    },
+    {
+      "objectID": "story-0027",
+      "title": "Database Branching 101",
+      "url": "https://example.com/database-branching-101",
+      "points": 235,
+      "author": "alex",
+      "ageHours": 48,
+      "num_comments": 140
+    },
+    {
+      "objectID": "story-0028",
+      "title": "Understanding Event Sourcing",
+      "url": "https://example.com/understanding-event-sourcing",
+      "points": 225,
+      "author": "blair",
+      "ageHours": 72,
+      "num_comments": 165
+    },
+    {
+      "objectID": "story-0029",
+      "title": "Designing Better Rate Limits",
+      "url": "https://example.com/designing-better-rate-limits",
+      "points": 215,
+      "author": "chris",
+      "ageHours": 96,
+      "num_comments": 180
+    },
+    {
+      "objectID": "story-0030",
+      "title": "Pragmatic Service Ownership",
+      "url": "https://example.com/pragmatic-service-ownership",
+      "points": 205,
+      "author": "devon",
+      "ageHours": 120,
+      "num_comments": 75
+    },
+    {
+      "objectID": "story-0031",
+      "title": "Memory-Safe Systems Programming",
+      "url": "https://example.com/memory-safe-systems",
+      "points": 195,
+      "author": "elliot",
+      "ageHours": 144,
+      "num_comments": 66
+    },
+    {
+      "objectID": "story-0032",
+      "title": "A Better Oncall Handoff",
+      "url": "https://example.com/better-oncall-handoff",
+      "points": 185,
+      "author": "farah",
+      "ageHours": 160,
+      "num_comments": 88
+    },
+    {
+      "objectID": "story-0033",
+      "title": "Composable Data Pipelines",
+      "url": "https://example.com/composable-data-pipelines",
+      "points": 175,
+      "author": "gavin",
+      "ageHours": 200,
+      "num_comments": 99
+    },
+    {
+      "objectID": "story-0034",
+      "title": "Kubernetes Without Regret",
+      "url": "https://example.com/kubernetes-without-regret",
+      "points": 165,
+      "author": "harper",
+      "ageHours": 260,
+      "num_comments": 120
+    },
+    {
+      "objectID": "story-0035",
+      "title": "Cost-Aware Batch Processing",
+      "url": "https://example.com/cost-aware-batch-processing",
+      "points": 155,
+      "author": "isaac",
+      "ageHours": 340,
+      "num_comments": 140
+    },
+    {
+      "objectID": "story-0036",
+      "title": "Working Effectively with Legacy Code",
+      "url": "https://example.com/legacy-code-effectively",
+      "points": 145,
+      "author": "jules",
+      "ageHours": 480,
+      "num_comments": 160
+    },
+    {
+      "objectID": "story-0037",
+      "title": "Contract Tests That Scale",
+      "url": "https://example.com/contract-tests-scale",
+      "points": 135,
+      "author": "keira",
+      "ageHours": 600,
+      "num_comments": 170
+    },
+    {
+      "objectID": "story-0038",
+      "title": "Observability for Product Teams",
+      "url": "https://example.com/observability-product-teams",
+      "points": 125,
+      "author": "leo",
+      "ageHours": 700,
+      "num_comments": 180
+    },
+    {
+      "objectID": "story-0039",
+      "title": "Archive: Classic Systems Design",
+      "url": "https://example.com/archive-classic-systems-design",
+      "points": 600,
+      "author": "maya",
+      "ageHours": 760,
+      "num_comments": 250
+    },
+    {
+      "objectID": "story-0040",
+      "title": "Archive: High Throughput Messaging",
+      "url": "https://example.com/archive-high-throughput-messaging",
+      "points": 450,
+      "author": "noah",
+      "ageHours": 900,
+      "num_comments": 300
+    }
+  ]
+}

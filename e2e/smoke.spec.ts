@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const IS_LIVE_E2E = process.env.E2E_USE_LIVE === "1";
+
 function appRoot(page: Page) {
   return page.locator(".container").last();
 }
@@ -28,10 +30,14 @@ function firstStoryTitleLocator(page: Page) {
 }
 
 test.describe("HN-RSS smoke", () => {
-  test("range + sort update URL and reorder visible stories", async ({ page }) => {
+  test("range + sort update URL and load visible stories", async ({ page }) => {
     await gotoHome(page);
 
-    const topFirstTitle = await firstStoryTitleLocator(page).innerText();
+    const topFirstTitle = (await firstStoryTitleLocator(page).innerText()).trim();
+    expect(topFirstTitle.length).toBeGreaterThan(0);
+    if (!IS_LIVE_E2E) {
+      expect(topFirstTitle).toBe("Top Titan Systems");
+    }
 
     await appRoot(page).getByRole("link", { name: "Last 7 Days" }).first().click();
     await expect(page).toHaveURL(/range=7d/);
@@ -47,7 +53,11 @@ test.describe("HN-RSS smoke", () => {
       .first()
       .click();
     await expect(page).toHaveURL(/sort=new/);
-    const newestFirstTitle = await firstStoryTitleLocator(page).innerText();
+    const newestFirstTitle = (await firstStoryTitleLocator(page).innerText()).trim();
+    expect(newestFirstTitle.length).toBeGreaterThan(0);
+    if (!IS_LIVE_E2E) {
+      expect(newestFirstTitle).toBe("Fresh Flash Dispatch");
+    }
 
     await appRoot(page)
       .getByRole("group", { name: "Sort stories" })
@@ -56,15 +66,11 @@ test.describe("HN-RSS smoke", () => {
       .first()
       .click();
     await expect(page).toHaveURL(/sort=comments/);
-    const commentsFirstTitle = await firstStoryTitleLocator(page).innerText();
-
-    expect(
-      new Set([
-        topFirstTitle.trim(),
-        newestFirstTitle.trim(),
-        commentsFirstTitle.trim(),
-      ]).size
-    ).toBeGreaterThan(1);
+    const commentsFirstTitle = (await firstStoryTitleLocator(page).innerText()).trim();
+    expect(commentsFirstTitle.length).toBeGreaterThan(0);
+    if (!IS_LIVE_E2E) {
+      expect(commentsFirstTitle).toBe("Comment Storm Digest");
+    }
   });
 
   test("read + hideRead + save flow", async ({ page }) => {
