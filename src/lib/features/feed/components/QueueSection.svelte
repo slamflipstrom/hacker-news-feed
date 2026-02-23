@@ -116,7 +116,7 @@
 	}
 
 	.queue-item.read {
-		opacity: 0.68;
+		background: var(--color-surface-subtle);
 	}
 
 	.queue-rank {

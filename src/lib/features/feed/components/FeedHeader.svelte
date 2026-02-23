@@ -12,6 +12,8 @@
 
 	interface Props {
 		storiesLimit: number;
+		showingSavedOnly: boolean;
+		savedStoriesCount: number;
 		timeRanges: TimeRangeOption[];
 		sortModes: SortModeOption[];
 		selectedTimeRange: TimeRange;
@@ -23,12 +25,16 @@
 		onSelectTimeRange: (timeRange: TimeRange) => Promise<void>;
 		onSelectSortMode: (sortMode: SortMode) => void;
 		onToggleHideRead: () => void;
+		onShowAllStories: () => void;
+		onShowSavedStories: () => void;
 		onCycleTheme: () => void;
 		onToggleKeyboardShortcuts: () => void;
 	}
 
 	let {
 		storiesLimit,
+		showingSavedOnly,
+		savedStoriesCount,
 		timeRanges,
 		sortModes,
 		selectedTimeRange,
@@ -40,6 +46,8 @@
 		onSelectTimeRange,
 		onSelectSortMode,
 		onToggleHideRead,
+		onShowAllStories,
+		onShowSavedStories,
 		onCycleTheme,
 		onToggleKeyboardShortcuts
 	}: Props = $props();
@@ -47,7 +55,13 @@
 
 <header>
 	<div class="header-top">
-		<h1>🔥 Top {storiesLimit} Hacker News Stories</h1>
+		<h1>
+			{#if showingSavedOnly}
+				🔖 Saved Hacker News Stories
+			{:else}
+				🔥 Top {storiesLimit} Hacker News Stories
+			{/if}
+		</h1>
 		<button
 			type="button"
 			class="theme-toggle"
@@ -58,22 +72,47 @@
 			{THEME_LABELS[themeMode]}
 		</button>
 	</div>
-	<div class="time-range-selector">
-		{#each timeRanges as range (range.value)}
-			<a
-				href={getRangeHref(range.value)}
-				class="range-btn"
-				class:active={selectedTimeRange === range.value}
-				data-sveltekit-noscroll
-				onclick={(event) => {
-					event.preventDefault();
-					void onSelectTimeRange(range.value);
-				}}
-			>
-				{range.label}
-			</a>
-		{/each}
+	<div class="view-selector" role="group" aria-label="Story scope">
+		<button
+			type="button"
+			class="view-btn"
+			class:active={!showingSavedOnly}
+			aria-pressed={!showingSavedOnly}
+			onclick={onShowAllStories}
+		>
+			All stories
+		</button>
+		<button
+			type="button"
+			class="view-btn"
+			class:active={showingSavedOnly}
+			aria-pressed={showingSavedOnly}
+			onclick={onShowSavedStories}
+		>
+			Saved ({savedStoriesCount})
+		</button>
 	</div>
+	{#if !showingSavedOnly}
+		<div class="time-range-selector">
+			{#each timeRanges as range (range.value)}
+				<a
+					href={getRangeHref(range.value)}
+					class="range-btn"
+					class:active={selectedTimeRange === range.value}
+					aria-current={selectedTimeRange === range.value ? 'page' : undefined}
+					data-sveltekit-noscroll
+					onclick={(event) => {
+						event.preventDefault();
+						void onSelectTimeRange(range.value);
+					}}
+				>
+					{range.label}
+				</a>
+			{/each}
+		</div>
+	{:else}
+		<p class="saved-scope-note">Saved stories are stored on this browser/device.</p>
+	{/if}
 	<div class="preference-controls">
 		<div class="sort-selector" role="group" aria-label="Sort stories">
 			{#each sortModes as mode (mode.value)}
@@ -81,6 +120,7 @@
 					type="button"
 					class="sort-btn"
 					class:active={selectedSortMode === mode.value}
+					aria-pressed={selectedSortMode === mode.value}
 					onclick={() => onSelectSortMode(mode.value)}
 				>
 					{mode.label}
@@ -129,10 +169,23 @@
 		color: var(--color-brand);
 	}
 
+	.view-selector {
+		display: inline-flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
 	.time-range-selector {
+		margin-top: 0.75rem;
 		display: flex;
 		gap: 0.5rem;
 		flex-wrap: wrap;
+	}
+
+	.saved-scope-note {
+		margin: 0.75rem 0 0;
+		font-size: 0.82rem;
+		color: var(--color-text-muted);
 	}
 
 	.range-btn {
@@ -154,7 +207,7 @@
 
 	.range-btn.active {
 		background: var(--color-brand);
-		color: white;
+		color: var(--color-brand-contrast-text);
 		border-color: var(--color-brand);
 	}
 
@@ -173,7 +226,8 @@
 	}
 
 	.sort-btn,
-	.hide-read-toggle {
+	.hide-read-toggle,
+	.view-btn {
 		padding: 0.38rem 0.7rem;
 		border: 1px solid var(--color-border);
 		border-radius: 999px;
@@ -186,13 +240,15 @@
 	}
 
 	.sort-btn:hover,
-	.hide-read-toggle:hover {
+	.hide-read-toggle:hover,
+	.view-btn:hover {
 		border-color: var(--color-border-hover);
 		background: var(--color-surface-hover);
 	}
 
 	.sort-btn.active,
-	.hide-read-toggle.active {
+	.hide-read-toggle.active,
+	.view-btn.active {
 		border-color: var(--color-accent-border);
 		background: var(--color-accent-bg);
 		color: var(--color-accent-text);

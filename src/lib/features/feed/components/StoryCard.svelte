@@ -11,7 +11,7 @@
 		isRead: boolean;
 		isSaved: boolean;
 		onMarkRead: (storyId: string) => void;
-		onToggleSave: (storyId: string) => void;
+		onToggleSave: (story: HNStory) => void;
 		onSkip: (storyId: string) => void;
 	}
 
@@ -63,7 +63,7 @@
 				type="button"
 				class="story-action story-action-save"
 				aria-pressed={isSaved}
-				onclick={() => onToggleSave(story.objectID)}
+				onclick={() => onToggleSave(story)}
 			>
 				{isSaved ? 'Saved' : 'Save'}
 			</button>
@@ -71,7 +71,7 @@
 				Skip
 			</button>
 		</div>
-		<StoryMeta {story} {isRead} {isSaved} />
+		<StoryMeta {story} {isRead} />
 	</div>
 </li>
 
@@ -99,7 +99,6 @@
 	.story-item.read {
 		background: var(--color-surface-subtle);
 		border-color: var(--color-border-subtle);
-		opacity: 0.72;
 	}
 
 	.story-item.read.active {

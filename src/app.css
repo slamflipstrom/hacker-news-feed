@@ -13,9 +13,9 @@
 	--color-text-primary: #333333;
 	--color-text-secondary: #555555;
 	--color-text-muted: #666666;
-	--color-text-faint: #999999;
-	--color-text-hint: #7b7b7b;
-	--color-text-author: #8a8a8a;
+	--color-text-faint: #737373;
+	--color-text-hint: #666666;
+	--color-text-author: #666666;
 
 	/* Borders */
 	--color-border: #e0e0e0;
@@ -23,8 +23,9 @@
 	--color-border-hover: #cfcfcf;
 
 	/* Brand */
-	--color-brand: #ff6600;
-	--color-brand-light: #ff8a3d;
+	--color-brand: #b34700;
+	--color-brand-light: #d4742f;
+	--color-brand-contrast-text: #ffffff;
 
 	/* Accent (warm orange) */
 	--color-accent-bg: #fff3eb;
@@ -32,7 +33,7 @@
 	--color-accent-border: #ffba8a;
 	--color-accent-border-light: #ffcfab;
 	--color-accent-text: #bb4f00;
-	--color-accent-text-strong: #c25100;
+	--color-accent-text-strong: #9f3f00;
 	--color-accent-link: #8f4a16;
 
 	/* Queue section */
@@ -42,15 +43,15 @@
 	--color-queue-label: #99521d;
 	--color-queue-track: #ffe7d6;
 	--color-queue-item-border: #f3d8c6;
-	--color-queue-rank: #ab6a3f;
+	--color-queue-rank: #8a4f2a;
 	--color-queue-link: #2d2d2d;
 	--color-queue-meta: #7c5f4a;
 
 	/* Status badges */
 	--color-status-read-bg: #f0f0f0;
-	--color-status-read-text: #666666;
+	--color-status-read-text: #595959;
 	--color-status-saved-bg: #fff0e5;
-	--color-status-saved-text: #cc5a00;
+	--color-status-saved-text: #8f3900;
 
 	/* Error state */
 	--color-error-bg: #fff5f5;
@@ -77,13 +78,17 @@
 	--color-text-primary: #e2e2e2;
 	--color-text-secondary: #bdbdbd;
 	--color-text-muted: #949494;
-	--color-text-faint: #666666;
-	--color-text-hint: #787878;
-	--color-text-author: #868686;
+	--color-text-faint: #8f8f8f;
+	--color-text-hint: #989898;
+	--color-text-author: #9a9a9a;
 
 	--color-border: #363636;
 	--color-border-subtle: #2c2c2c;
 	--color-border-hover: #505050;
+
+	--color-brand: #ff9a55;
+	--color-brand-light: #ffb47f;
+	--color-brand-contrast-text: #1a0a00;
 
 	--color-accent-bg: #2a1400;
 	--color-accent-bg-hover: #361a00;
@@ -99,12 +104,12 @@
 	--color-queue-label: #cc7a3a;
 	--color-queue-track: #3d1e0c;
 	--color-queue-item-border: #3a2210;
-	--color-queue-rank: #aa6840;
+	--color-queue-rank: #c08a63;
 	--color-queue-link: #d5d5d5;
-	--color-queue-meta: #8a706a;
+	--color-queue-meta: #a58f88;
 
 	--color-status-read-bg: #2a2a2a;
-	--color-status-read-text: #888888;
+	--color-status-read-text: #a3a3a3;
 	--color-status-saved-bg: #2a1200;
 	--color-status-saved-text: #ff8c40;
 
@@ -132,13 +137,17 @@
 		--color-text-primary: #e2e2e2;
 		--color-text-secondary: #bdbdbd;
 		--color-text-muted: #949494;
-		--color-text-faint: #666666;
-		--color-text-hint: #787878;
-		--color-text-author: #868686;
+		--color-text-faint: #8f8f8f;
+		--color-text-hint: #989898;
+		--color-text-author: #9a9a9a;
 
 		--color-border: #363636;
 		--color-border-subtle: #2c2c2c;
 		--color-border-hover: #505050;
+
+		--color-brand: #ff9a55;
+		--color-brand-light: #ffb47f;
+		--color-brand-contrast-text: #1a0a00;
 
 		--color-accent-bg: #2a1400;
 		--color-accent-bg-hover: #361a00;
@@ -154,12 +163,12 @@
 		--color-queue-label: #cc7a3a;
 		--color-queue-track: #3d1e0c;
 		--color-queue-item-border: #3a2210;
-		--color-queue-rank: #aa6840;
+		--color-queue-rank: #c08a63;
 		--color-queue-link: #d5d5d5;
-		--color-queue-meta: #8a706a;
+		--color-queue-meta: #a58f88;
 
 		--color-status-read-bg: #2a2a2a;
-		--color-status-read-text: #888888;
+		--color-status-read-text: #a3a3a3;
 		--color-status-saved-bg: #2a1200;
 		--color-status-saved-text: #ff8c40;
 

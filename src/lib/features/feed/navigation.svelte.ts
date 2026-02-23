@@ -6,7 +6,7 @@ interface NavigationDependencies {
 	getStoryElementId: (storyId: string) => string;
 	onOpenStory: (story: HNStory) => void;
 	onOpenStoryComments: (story: HNStory) => void;
-	onToggleStorySaved: (storyId: string) => void;
+	onToggleStorySaved: (story: HNStory) => void;
 	onMarkStoryRead: (storyId: string) => void;
 	onToggleSortMode: () => void;
 	onCycleTimeRange: () => void;
@@ -21,6 +21,16 @@ function isEditableTarget(target: EventTarget | null): boolean {
 		tagName === 'INPUT' ||
 		tagName === 'TEXTAREA' ||
 		tagName === 'SELECT'
+	);
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+	const element = target as Element | null;
+	if (!element) return false;
+	return (
+		element.closest(
+			'a[href], button, summary, [role="button"], [role="link"], [tabindex]:not([tabindex="-1"])'
+		) !== null
 	);
 }
 
@@ -53,6 +63,7 @@ export function createNavigationController(deps: NavigationDependencies) {
 
 	function handleKeyboardShortcuts(event: KeyboardEvent): void {
 		if (event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
+		if (isInteractiveTarget(event.target)) return;
 
 		const key = event.key.toLowerCase();
 		if (key === 't') {
@@ -90,7 +101,7 @@ export function createNavigationController(deps: NavigationDependencies) {
 
 		if (key === 's') {
 			event.preventDefault();
-			deps.onToggleStorySaved(activeStory.objectID);
+			deps.onToggleStorySaved(activeStory);
 			return;
 		}
 

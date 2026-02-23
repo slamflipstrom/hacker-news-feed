@@ -1,3 +1,43 @@
+# Saved Posts Access + Management (2026-02-23)
+
+## Objective
+Provide a clear way for users to access and manage saved posts, including saved items that are no longer in the currently fetched feed window.
+
+## Plan
+- [x] Add a saved-view control in the feed header (`All` vs `Saved`) and show saved count.
+- [x] Persist saved story snapshots (not only IDs) in localStorage for later retrieval.
+- [x] Update page rendering to support a saved-only list with clear empty states and existing save/unsave actions.
+- [x] Update keyboard/save plumbing to pass full story data where needed.
+- [x] Add/extend e2e coverage for saved-view access and unsave management behavior.
+- [x] Update README feature docs.
+- [x] Run `pnpm typecheck`.
+- [x] Run targeted e2e smoke coverage for saved flow.
+
+## Verification
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm test:e2e --grep "read \+ hideRead \+ save flow"` passes.
+
+## Review
+Status: Completed.
+
+### What changed
+- Added a story-scope control in `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/components/FeedHeader.svelte` so users can switch between `All stories` and `Saved`.
+- Added saved-story snapshot persistence (`hnrss:saved-stories`) in `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/story-state.svelte.ts`, while keeping compatibility with existing saved ID storage.
+- Updated orchestration in `/Users/samlindstrom/Code/HN-RSS/src/routes/+page.svelte` to render a saved-only feed, hide queue in saved mode, and show saved-specific empty states.
+- Updated save callback plumbing to pass full `HNStory` objects through:
+  - `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/components/StoryCard.svelte`
+  - `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/components/StoryList.svelte`
+  - `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/navigation.svelte.ts`
+  - `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/types.ts`
+- Extended smoke coverage in `/Users/samlindstrom/Code/HN-RSS/e2e/smoke.spec.ts` to validate access and management in saved scope.
+- Updated feature docs in `/Users/samlindstrom/Code/HN-RSS/README.md`.
+
+### Verification notes
+- `pnpm typecheck` passed with 0 errors/warnings.
+- `pnpm test:e2e --grep "read \+ hideRead \+ save flow"` passed (`1 passed`).
+
+---
+
 # Keyboard Filter Shortcuts (2026-02-23)
 
 ## Objective
@@ -234,3 +274,75 @@ Status: Completed.
 ### Verification
 - Workflow now contains `with: version: 10.30.0` for `pnpm/action-setup@v4`.
 - `package.json` now includes `"packageManager": "pnpm@10.30.0"`.
+
+---
+
+# Accessibility Audit (2026-02-23)
+
+## Objective
+Audit the current app UI for accessibility violations and report concrete issues with severity and exact file references.
+
+## Plan
+- [x] Run a static accessibility pass on Svelte components (semantics, labels, landmarks, heading order, control naming).
+- [x] Run an interactive accessibility pass (keyboard-only navigation, focus visibility/order, shortcut safety).
+- [x] Run automated checks in-browser for common issues (roles, names, ARIA misuse, contrast signals where detectable).
+- [x] Consolidate findings by severity with file/line references and practical remediation guidance.
+- [x] Add a review summary to this section with verification notes.
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm typecheck` passed (`svelte-check found 0 errors and 0 warnings`).
+- Playwright runtime validation confirmed keyboard interception regression:
+  - pressing `Enter` on focused `Most Discussed` did not toggle sort and instead triggered `window.open`.
+  - pressing `Enter` on focused `Last 7 Days` did not navigate and instead triggered `window.open`.
+- Axe-core scan (WCAG A/AA tags) run in-browser for both themes:
+  - light mode: `color-contrast` (85 nodes), `document-title` (1 node)
+  - dark mode: `color-contrast` (27 nodes), `document-title` (1 node)
+
+### Findings summary
+- Critical keyboard behavior bug in global shortcut handler (`Enter` hijacked from focused controls).
+- Active filter state is visual-only for range/sort controls (not announced as selected/current).
+- Missing document title in app shell.
+- Widespread contrast failures across header, queue, and story controls; worst offenders include orange brand-on-white and several muted text tokens at small sizes.
+
+---
+
+# Accessibility P0/P1 Remediation (2026-02-23)
+
+## Objective
+Fix all identified P0 and P1 accessibility issues from the audit:
+- keyboard activation hijack on focused controls
+- missing active-state semantics
+- missing document title
+- contrast violations in light/dark themes
+
+## Plan
+- [x] Update global keyboard shortcut handler to avoid intercepting keys from interactive controls.
+- [x] Add explicit active-state ARIA semantics to range/sort/view controls.
+- [x] Add document title in app head metadata.
+- [x] Adjust color tokens and active button text treatment to pass WCAG AA contrast requirements.
+- [x] Re-run verification (`pnpm typecheck` + axe checks in light/dark) and document results.
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm typecheck` passed (`svelte-check found 0 errors and 0 warnings`).
+- Keyboard activation checks (Playwright runtime):
+  - `Enter` on focused `Most Discussed` updates sort to comments, updates URL query, and does not call `window.open`.
+  - `Enter` on focused `Last 7 Days` navigates to `range=7d` and does not call `window.open`.
+- Active-state semantics checks:
+  - Active range now exposes `aria-current="page"`.
+  - Active sort now exposes `aria-pressed="true"`.
+- Axe-core (`wcag2a`, `wcag2aa`) checks after remediation:
+  - Light theme: no violations.
+  - Dark theme: no violations.
+
+### What changed
+- Prevented global keyboard shortcut interception when focus is inside interactive elements.
+- Added accessible active-state semantics for story scope, range, and sort controls.
+- Added document `<title>` in layout head.
+- Updated light/dark/system color tokens and active range foreground treatment for WCAG contrast compliance.
+- Removed read-state opacity dimming that reduced text/control contrast.
