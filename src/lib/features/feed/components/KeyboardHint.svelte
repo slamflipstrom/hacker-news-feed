@@ -7,7 +7,9 @@
 </script>
 
 {#if show}
-	<p class="keyboard-hint">Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read</p>
+	<p class="keyboard-hint">
+		Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read • t sort • r range
+	</p>
 {/if}
 
 <style>

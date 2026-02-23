@@ -8,6 +8,8 @@ interface NavigationDependencies {
 	onOpenStoryComments: (story: HNStory) => void;
 	onToggleStorySaved: (storyId: string) => void;
 	onMarkStoryRead: (storyId: string) => void;
+	onToggleSortMode: () => void;
+	onCycleTimeRange: () => void;
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -53,6 +55,18 @@ export function createNavigationController(deps: NavigationDependencies) {
 		if (event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
 
 		const key = event.key.toLowerCase();
+		if (key === 't') {
+			event.preventDefault();
+			deps.onToggleSortMode();
+			return;
+		}
+
+		if (key === 'r') {
+			event.preventDefault();
+			deps.onCycleTimeRange();
+			return;
+		}
+
 		if (key === 'j') {
 			event.preventDefault();
 			setActiveStoryIndex(state.activeStoryIndex + 1);

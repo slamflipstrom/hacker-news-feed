@@ -35,7 +35,7 @@ This project uses `pnpm`.
   - Renders filters, queue, story cards, and keyboard hints
   - Persists read/saved IDs in `localStorage`
   - Persists preference state in `localStorage`, URL query, and cookies
-  - Implements keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read
+  - Implements keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read, `t` toggle sort, `r` cycle range
 - `src/routes/+layout.svelte`
   - App shell and favicon wiring
 

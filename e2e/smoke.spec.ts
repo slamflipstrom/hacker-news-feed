@@ -88,6 +88,15 @@ test.describe("HN-RSS smoke", () => {
     await gotoHome(page);
     await appRoot(page).click();
 
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/sort=comments/);
+
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/sort=top/);
+
+    await page.keyboard.press("r");
+    await expect(page).toHaveURL(/range=7d/);
+
     const activeTitle = appRoot(page).locator(".story-list .story-item.active .story-title a");
     const originalActive = (await activeTitle.innerText()).trim();
 

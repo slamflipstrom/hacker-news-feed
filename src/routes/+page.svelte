@@ -8,7 +8,7 @@
 	import EmptyState from '$lib/features/feed/components/EmptyState.svelte';
 	import QueueSection from '$lib/features/feed/components/QueueSection.svelte';
 	import StoryList from '$lib/features/feed/components/StoryList.svelte';
-	import type { HNStory } from '$lib/hn-client';
+	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import type { SortMode } from '$lib/preferences';
 	import type { PageData } from './$types';
 
@@ -48,6 +48,23 @@
 		navigation.resetActiveStoryIndex();
 	}
 
+	function toggleSortMode(): void {
+		const nextSortMode: SortMode =
+			preferences.state.selectedSortMode === 'top' ? 'comments' : 'top';
+		selectSortMode(nextSortMode);
+	}
+
+	function cycleTimeRange(): void {
+		const currentIndex = TIME_RANGE_OPTIONS.findIndex(
+			(option) => option.value === preferences.state.selectedTimeRange
+		);
+		const nextRange: TimeRange =
+			TIME_RANGE_OPTIONS[(currentIndex + 1) % TIME_RANGE_OPTIONS.length]?.value ??
+			TIME_RANGE_OPTIONS[0].value;
+		navigation.resetActiveStoryIndex();
+		void preferences.selectTimeRange(nextRange);
+	}
+
 	function toggleHideRead(): void {
 		preferences.toggleHideRead();
 		navigation.resetActiveStoryIndex();
@@ -63,7 +80,9 @@
 		onOpenStory: openStory,
 		onOpenStoryComments: openStoryComments,
 		onToggleStorySaved: storyState.toggleStorySaved,
-		onMarkStoryRead: storyState.markStoryRead
+		onMarkStoryRead: storyState.markStoryRead,
+		onToggleSortMode: toggleSortMode,
+		onCycleTimeRange: cycleTimeRange
 	});
 
 	$effect(() => {

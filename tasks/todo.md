@@ -1,3 +1,41 @@
+# Keyboard Filter Shortcuts (2026-02-23)
+
+## Objective
+Add keyboard shortcuts to change active feed filters without using mouse controls:
+- One key toggles sort mode (`top` ↔ `comments`)
+- One key cycles time range (`24h` → `7d` → `30d` → `24h`)
+
+## Plan
+- [x] Extend keyboard controller dependencies with filter actions.
+- [x] Wire shortcut handlers in `src/routes/+page.svelte` to existing preference APIs.
+- [x] Update visible shortcut hints/docs to include new keys.
+- [x] Add/extend e2e coverage for new filter shortcuts.
+
+## Verification
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm test:e2e --grep "keyboard shortcuts work"` passes.
+
+## Review
+Status: Completed.
+
+### What changed
+- Added two new keyboard actions in `src/lib/features/feed/navigation.svelte.ts`:
+  - `t` toggles sort mode
+  - `r` cycles time range
+- Added page-level handlers in `src/routes/+page.svelte` to:
+  - toggle `top/comments` sort state via existing preference controller
+  - cycle time ranges in configured order and trigger route navigation
+  - reset active story index when filters change via shortcut
+- Updated visible shortcut text in `src/lib/features/feed/components/KeyboardHint.svelte`.
+- Updated shortcut docs in `README.md` and `AGENTS.md`.
+- Extended keyboard smoke coverage in `e2e/smoke.spec.ts`.
+
+### Verification notes
+- `pnpm typecheck` reported 0 errors and 0 warnings.
+- Keyboard e2e scenario passed in Chromium (`1 passed`).
+
+---
+
 # Dark Mode Implementation Plan
 
 ## Objective
@@ -134,6 +172,30 @@ Status: Completed.
 ### Verification
 - Workflow and README changes were validated via file inspection.
 - No application runtime code was modified.
+
+---
+
+# Dark Mode P1 Remediation (2026-02-23)
+
+## Objective
+Address the P1 dark-mode gaps:
+- enforce `theme` query precedence over cookie/default
+- keep theme in URL state sync with other feed preferences
+- eliminate first-paint mismatch by resolving theme before hydration with `color-scheme` support
+
+## Plan
+- [x] Update server preference resolution to apply `theme` as query param first, then cookie, then default.
+- [x] Update layout theme resolution to mirror query-first behavior for SSR consistency.
+- [x] Include `theme` in preference URL serialization and replacement logic.
+- [x] Update pre-hydration script in `src/app.html` to resolve theme from query, then localStorage, then cookie.
+- [x] Add `color-scheme` metadata and CSS behavior to align browser chrome with active theme.
+- [x] Add/extend tests for theme precedence and persistence behavior.
+- [ ] Run `pnpm typecheck`.
+- [ ] Run `pnpm test:unit`.
+- [ ] Run `pnpm test:e2e`.
+
+## Review
+Status: In progress.
 
 ---
 
