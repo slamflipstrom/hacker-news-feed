@@ -26,10 +26,6 @@ export function getStoryFaviconUrl(story: HNStory): string {
 export function sortStories(stories: HNStory[], sortMode: SortMode): HNStory[] {
 	const sortedStories = [...stories];
 
-	if (sortMode === 'new') {
-		return sortedStories.sort((a, b) => b.created_at_i - a.created_at_i || b.points - a.points);
-	}
-
 	if (sortMode === 'comments') {
 		return sortedStories.sort((a, b) => b.num_comments - a.num_comments || b.points - a.points);
 	}

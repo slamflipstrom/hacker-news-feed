@@ -1,6 +1,6 @@
 import type { TimeRange } from '$lib/hn-client';
 
-export const SORT_MODES = ['top', 'new', 'comments'] as const;
+export const SORT_MODES = ['top', 'comments'] as const;
 export type SortMode = (typeof SORT_MODES)[number];
 
 export const DEFAULT_SORT_MODE: SortMode = 'top';
