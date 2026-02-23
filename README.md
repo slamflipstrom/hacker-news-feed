@@ -93,9 +93,13 @@ pnpm cf:preview
 - Framework preset: `SvelteKit`
 - Build command: `pnpm build`
 - Build output directory: `.svelte-kit/cloudflare`
+- Deploy command: *(leave empty / unset)*
 - Production branch: `main`
 - Node version: `20` or newer
 - Preview deploys: enabled for non-`main` branches
+
+For Git-integrated Pages deploys, do **not** set a custom deploy command such as
+`npx wrangler deploy`. Pages automatically deploys the build output.
 
 ### Cloudflare config in repo
 
