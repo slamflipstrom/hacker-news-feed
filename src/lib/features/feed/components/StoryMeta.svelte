@@ -56,31 +56,31 @@
 		font-size: 0.74rem;
 		font-weight: 600;
 		line-height: 1;
-		border: 1px solid #e6e6e6;
-		background: #fff;
-		color: #555;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
 		text-decoration: none;
 	}
 
 	.meta-badge-score {
-		background: #fff3eb;
-		border-color: #ffd8bf;
-		color: #c25100;
+		background: var(--color-accent-bg);
+		border-color: var(--color-accent-border);
+		color: var(--color-accent-text-strong);
 	}
 
 	.meta-badge-comments:hover {
-		border-color: #cfcfcf;
-		background: #f8f8f8;
-		color: #383838;
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
+		color: var(--color-text-primary);
 	}
 
 	.meta-badge-age {
-		color: #666;
+		color: var(--color-text-muted);
 	}
 
 	.story-author {
 		font-size: 0.8rem;
-		color: #8a8a8a;
+		color: var(--color-text-author);
 	}
 
 	.status-badge {
@@ -93,12 +93,12 @@
 	}
 
 	.status-read {
-		background: #f0f0f0;
-		color: #666;
+		background: var(--color-status-read-bg);
+		color: var(--color-status-read-text);
 	}
 
 	.status-saved {
-		background: #fff0e5;
-		color: #cc5a00;
+		background: var(--color-status-saved-bg);
+		color: var(--color-status-saved-text);
 	}
 </style>

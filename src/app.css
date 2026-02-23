@@ -1,0 +1,182 @@
+/* === CSS custom properties — light mode defaults === */
+:root {
+	/* Page & surfaces */
+	--color-page-bg: #ffffff;
+	--color-surface: #ffffff;
+	--color-surface-subtle: #fafafa;
+	--color-surface-chip: #f6f6f6;
+	--color-surface-hover: #f8f8f8;
+
+	/* Text */
+	--color-text-primary: #333333;
+	--color-text-secondary: #555555;
+	--color-text-muted: #666666;
+	--color-text-faint: #999999;
+	--color-text-hint: #7b7b7b;
+	--color-text-author: #8a8a8a;
+
+	/* Borders */
+	--color-border: #e0e0e0;
+	--color-border-subtle: #ececec;
+	--color-border-hover: #cfcfcf;
+
+	/* Brand */
+	--color-brand: #ff6600;
+	--color-brand-light: #ff8a3d;
+
+	/* Accent (warm orange) */
+	--color-accent-bg: #fff3eb;
+	--color-accent-bg-hover: #ffefe4;
+	--color-accent-border: #ffba8a;
+	--color-accent-border-light: #ffcfab;
+	--color-accent-text: #bb4f00;
+	--color-accent-text-strong: #c25100;
+	--color-accent-link: #8f4a16;
+
+	/* Queue section */
+	--color-queue-bg-from: #fff8f3;
+	--color-queue-border: #ffe1cc;
+	--color-queue-title: #a64500;
+	--color-queue-label: #99521d;
+	--color-queue-track: #ffe7d6;
+	--color-queue-item-border: #f3d8c6;
+	--color-queue-rank: #ab6a3f;
+	--color-queue-link: #2d2d2d;
+	--color-queue-meta: #7c5f4a;
+
+	/* Status badges */
+	--color-status-read-bg: #f0f0f0;
+	--color-status-read-text: #666666;
+	--color-status-saved-bg: #fff0e5;
+	--color-status-saved-text: #cc5a00;
+
+	/* Error state */
+	--color-error-bg: #fff5f5;
+	--color-error-border: #ffd5d5;
+	--color-error-text: #b20000;
+
+	/* Shadows */
+	--shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+	--shadow-card-hover-read: 0 3px 10px rgba(0, 0, 0, 0.08);
+	--shadow-card-active: 0 0 0 2px #ffe7d3;
+	--shadow-card-active-read: 0 0 0 2px #ffefe4;
+}
+
+/* === Dark mode overrides === */
+[data-theme='dark'] {
+	--color-page-bg: #111111;
+	--color-surface: #1e1e1e;
+	--color-surface-subtle: #262626;
+	--color-surface-chip: #2a2a2a;
+	--color-surface-hover: #2d2d2d;
+
+	--color-text-primary: #e2e2e2;
+	--color-text-secondary: #bdbdbd;
+	--color-text-muted: #949494;
+	--color-text-faint: #666666;
+	--color-text-hint: #787878;
+	--color-text-author: #868686;
+
+	--color-border: #363636;
+	--color-border-subtle: #2c2c2c;
+	--color-border-hover: #505050;
+
+	--color-accent-bg: #2a1400;
+	--color-accent-bg-hover: #361a00;
+	--color-accent-border: #7a3c18;
+	--color-accent-border-light: #8a4c24;
+	--color-accent-text: #ff9a55;
+	--color-accent-text-strong: #ff8c40;
+	--color-accent-link: #cc7a3a;
+
+	--color-queue-bg-from: #1a0d04;
+	--color-queue-border: #4a2810;
+	--color-queue-title: #ff9955;
+	--color-queue-label: #cc7a3a;
+	--color-queue-track: #3d1e0c;
+	--color-queue-item-border: #3a2210;
+	--color-queue-rank: #aa6840;
+	--color-queue-link: #d5d5d5;
+	--color-queue-meta: #8a706a;
+
+	--color-status-read-bg: #2a2a2a;
+	--color-status-read-text: #888888;
+	--color-status-saved-bg: #2a1200;
+	--color-status-saved-text: #ff8c40;
+
+	--color-error-bg: #1f0808;
+	--color-error-border: #5a1c1c;
+	--color-error-text: #ff6b6b;
+
+	--shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+	--shadow-card-hover-read: 0 3px 10px rgba(0, 0, 0, 0.35);
+	--shadow-card-active: 0 0 0 2px #7a3c18;
+	--shadow-card-active-read: 0 0 0 2px #5a2c10;
+}
+
+/* === System preference dark mode (when no explicit theme is set) === */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']):not([data-theme='dark']) {
+		--color-page-bg: #111111;
+		--color-surface: #1e1e1e;
+		--color-surface-subtle: #262626;
+		--color-surface-chip: #2a2a2a;
+		--color-surface-hover: #2d2d2d;
+
+		--color-text-primary: #e2e2e2;
+		--color-text-secondary: #bdbdbd;
+		--color-text-muted: #949494;
+		--color-text-faint: #666666;
+		--color-text-hint: #787878;
+		--color-text-author: #868686;
+
+		--color-border: #363636;
+		--color-border-subtle: #2c2c2c;
+		--color-border-hover: #505050;
+
+		--color-accent-bg: #2a1400;
+		--color-accent-bg-hover: #361a00;
+		--color-accent-border: #7a3c18;
+		--color-accent-border-light: #8a4c24;
+		--color-accent-text: #ff9a55;
+		--color-accent-text-strong: #ff8c40;
+		--color-accent-link: #cc7a3a;
+
+		--color-queue-bg-from: #1a0d04;
+		--color-queue-border: #4a2810;
+		--color-queue-title: #ff9955;
+		--color-queue-label: #cc7a3a;
+		--color-queue-track: #3d1e0c;
+		--color-queue-item-border: #3a2210;
+		--color-queue-rank: #aa6840;
+		--color-queue-link: #d5d5d5;
+		--color-queue-meta: #8a706a;
+
+		--color-status-read-bg: #2a2a2a;
+		--color-status-read-text: #888888;
+		--color-status-saved-bg: #2a1200;
+		--color-status-saved-text: #ff8c40;
+
+		--color-error-bg: #1f0808;
+		--color-error-border: #5a1c1c;
+		--color-error-text: #ff6b6b;
+
+		--shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+		--shadow-card-hover-read: 0 3px 10px rgba(0, 0, 0, 0.35);
+		--shadow-card-active: 0 0 0 2px #7a3c18;
+		--shadow-card-active-read: 0 0 0 2px #5a2c10;
+	}
+}
+
+/* === Global resets === */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background-color: var(--color-page-bg);
+	color: var(--color-text-primary);
+}

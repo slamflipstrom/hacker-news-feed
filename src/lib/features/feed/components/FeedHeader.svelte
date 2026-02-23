@@ -1,8 +1,14 @@
 <script lang="ts">
 	import type { TimeRange } from '$lib/hn-client';
-	import type { SortMode } from '$lib/preferences';
+	import type { SortMode, ThemeMode } from '$lib/preferences';
 	import type { TimeRangeOption, SortModeOption } from '$lib/features/feed/types';
 	import KeyboardHint from '$lib/features/feed/components/KeyboardHint.svelte';
+
+	const THEME_LABELS: Record<ThemeMode, string> = {
+		system: 'System',
+		light: '☀ Light',
+		dark: '☾ Dark'
+	};
 
 	interface Props {
 		storiesLimit: number;
@@ -11,11 +17,13 @@
 		selectedTimeRange: TimeRange;
 		selectedSortMode: SortMode;
 		hideReadStories: boolean;
+		themeMode: ThemeMode;
 		showKeyboardShortcuts: boolean;
 		getRangeHref: (timeRange: TimeRange) => string;
 		onSelectTimeRange: (timeRange: TimeRange) => Promise<void>;
 		onSelectSortMode: (sortMode: SortMode) => void;
 		onToggleHideRead: () => void;
+		onCycleTheme: () => void;
 		onToggleKeyboardShortcuts: () => void;
 	}
 
@@ -26,17 +34,30 @@
 		selectedTimeRange,
 		selectedSortMode,
 		hideReadStories,
+		themeMode,
 		showKeyboardShortcuts,
 		getRangeHref,
 		onSelectTimeRange,
 		onSelectSortMode,
 		onToggleHideRead,
+		onCycleTheme,
 		onToggleKeyboardShortcuts
 	}: Props = $props();
 </script>
 
 <header>
-	<h1>🔥 Top {storiesLimit} Hacker News Stories</h1>
+	<div class="header-top">
+		<h1>🔥 Top {storiesLimit} Hacker News Stories</h1>
+		<button
+			type="button"
+			class="theme-toggle"
+			class:active={themeMode !== 'system'}
+			aria-label="Cycle theme: current is {themeMode}"
+			onclick={onCycleTheme}
+		>
+			{THEME_LABELS[themeMode]}
+		</button>
+	</div>
 	<div class="time-range-selector">
 		{#each timeRanges as range (range.value)}
 			<a
@@ -94,10 +115,18 @@
 		margin-bottom: 2rem;
 	}
 
+	.header-top {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
 	h1 {
 		font-size: 2rem;
-		margin-bottom: 1.5rem;
-		color: #ff6600;
+		margin: 0;
+		color: var(--color-brand);
 	}
 
 	.time-range-selector {
@@ -108,25 +137,25 @@
 
 	.range-btn {
 		padding: 0.5rem 1rem;
-		border: 2px solid #e0e0e0;
+		border: 2px solid var(--color-border);
 		border-radius: 6px;
-		background: white;
+		background: var(--color-surface);
 		cursor: pointer;
 		text-decoration: none;
-		color: #333;
+		color: var(--color-text-primary);
 		font-size: 0.95rem;
 		transition: all 0.2s;
 	}
 
 	.range-btn:hover {
-		border-color: #ff6600;
-		background: #fff5f0;
+		border-color: var(--color-brand);
+		background: var(--color-accent-bg);
 	}
 
 	.range-btn.active {
-		background: #ff6600;
+		background: var(--color-brand);
 		color: white;
-		border-color: #ff6600;
+		border-color: var(--color-brand);
 	}
 
 	.preference-controls {
@@ -146,10 +175,10 @@
 	.sort-btn,
 	.hide-read-toggle {
 		padding: 0.38rem 0.7rem;
-		border: 1px solid #dddddd;
+		border: 1px solid var(--color-border);
 		border-radius: 999px;
-		background: white;
-		color: #4f4f4f;
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
 		font-size: 0.8rem;
 		font-weight: 600;
 		font-family: inherit;
@@ -158,20 +187,41 @@
 
 	.sort-btn:hover,
 	.hide-read-toggle:hover {
-		border-color: #cfcfcf;
-		background: #f8f8f8;
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
 	}
 
-	.sort-btn.active {
-		border-color: #ffbf94;
-		background: #fff3eb;
-		color: #bb4f00;
-	}
-
+	.sort-btn.active,
 	.hide-read-toggle.active {
-		border-color: #ffbf94;
-		background: #fff3eb;
-		color: #bb4f00;
+		border-color: var(--color-accent-border);
+		background: var(--color-accent-bg);
+		color: var(--color-accent-text);
+	}
+
+	.theme-toggle {
+		padding: 0.35rem 0.75rem;
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		font-size: 0.78rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.theme-toggle:hover {
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
+		color: var(--color-text-secondary);
+	}
+
+	.theme-toggle.active {
+		border-color: var(--color-accent-border);
+		background: var(--color-accent-bg);
+		color: var(--color-accent-text);
 	}
 
 	.keyboard-shortcuts-toggle {
@@ -182,7 +232,7 @@
 		padding: 0;
 		border: 0;
 		background: transparent;
-		color: #8f4a16;
+		color: var(--color-accent-link);
 		font-size: 0.8rem;
 		font-weight: 600;
 		font-family: inherit;
@@ -191,18 +241,18 @@
 	}
 
 	.keyboard-shortcuts-link:hover {
-		color: #bb4f00;
+		color: var(--color-accent-text);
 	}
 
 	.keyboard-shortcuts-link:focus-visible {
-		outline: 2px solid #ffbf94;
+		outline: 2px solid var(--color-accent-border);
 		outline-offset: 2px;
 		border-radius: 4px;
 	}
 
 	@media (max-width: 640px) {
 		h1 {
-			font-size: 1.5rem;
+			font-size: 1.3rem;
 		}
 
 		.time-range-selector {

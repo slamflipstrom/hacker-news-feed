@@ -17,7 +17,8 @@
 	const preferences = createPreferencesController({
 		timeRange: props.data.timeRange,
 		sortMode: props.data.sortMode,
-		hideRead: props.data.hideRead
+		hideRead: props.data.hideRead,
+		themeMode: props.data.themeMode
 	});
 	const storyState = createStoryStateController();
 	let showKeyboardShortcuts = $state(false);
@@ -69,6 +70,7 @@
 		preferences.state.selectedTimeRange = props.data.timeRange;
 		preferences.state.selectedSortMode = props.data.sortMode;
 		preferences.state.hideReadStories = props.data.hideRead;
+		preferences.state.selectedThemeMode = props.data.themeMode;
 	});
 </script>
 
@@ -82,11 +84,13 @@
 		selectedTimeRange={preferences.state.selectedTimeRange}
 		selectedSortMode={preferences.state.selectedSortMode}
 		hideReadStories={preferences.state.hideReadStories}
+		themeMode={preferences.state.selectedThemeMode}
 		{showKeyboardShortcuts}
 		getRangeHref={preferences.getRangeHref}
 		onSelectTimeRange={preferences.selectTimeRange}
 		onSelectSortMode={selectSortMode}
 		onToggleHideRead={toggleHideRead}
+		onCycleTheme={preferences.cycleTheme}
 		onToggleKeyboardShortcuts={toggleKeyboardShortcuts}
 	/>
 
@@ -129,9 +133,9 @@
 	}
 
 	.error-message {
-		background: #fff5f5;
-		border: 1px solid #ffd5d5;
-		color: #b20000;
+		background: var(--color-error-bg);
+		border: 1px solid var(--color-error-border);
+		color: var(--color-error-text);
 		padding: 0.75rem 1rem;
 		border-radius: 6px;
 		margin-bottom: 1rem;

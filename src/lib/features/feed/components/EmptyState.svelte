@@ -12,7 +12,7 @@
 	.no-stories {
 		text-align: center;
 		padding: 3rem;
-		color: #999;
+		color: var(--color-text-faint);
 		font-size: 1.125rem;
 	}
 </style>

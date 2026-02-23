@@ -1,10 +1,11 @@
 import type { HNStory, TimeRange } from '$lib/hn-client';
-import type { SortMode } from '$lib/preferences';
+import type { SortMode, ThemeMode } from '$lib/preferences';
 
 export interface FeedPreferences {
 	timeRange: TimeRange;
 	sortMode: SortMode;
 	hideRead: boolean;
+	themeMode: ThemeMode;
 }
 
 export interface StoryActions {

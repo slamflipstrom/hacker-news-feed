@@ -14,6 +14,6 @@
 	.keyboard-hint {
 		margin: 0.35rem 0 0;
 		font-size: 0.78rem;
-		color: #7b7b7b;
+		color: var(--color-text-hint);
 	}
 </style>

@@ -58,8 +58,8 @@
 		padding: 1rem;
 		margin-bottom: 1.25rem;
 		border-radius: 10px;
-		border: 1px solid #ffe1cc;
-		background: linear-gradient(180deg, #fff8f3 0%, #fff 100%);
+		border: 1px solid var(--color-queue-border);
+		background: linear-gradient(180deg, var(--color-queue-bg-from) 0%, var(--color-surface) 100%);
 	}
 
 	.queue-header {
@@ -74,27 +74,27 @@
 		margin: 0;
 		font-size: 1rem;
 		font-weight: 700;
-		color: #a64500;
+		color: var(--color-queue-title);
 	}
 
 	.queue-progress-label {
 		margin: 0;
 		font-size: 0.85rem;
 		font-weight: 600;
-		color: #99521d;
+		color: var(--color-queue-label);
 	}
 
 	.queue-progress-track {
 		height: 0.5rem;
 		border-radius: 999px;
-		background: #ffe7d6;
+		background: var(--color-queue-track);
 		overflow: hidden;
 		margin-bottom: 0.9rem;
 	}
 
 	.queue-progress-fill {
 		height: 100%;
-		background: linear-gradient(90deg, #ff8a3d 0%, #ff6600 100%);
+		background: linear-gradient(90deg, var(--color-brand-light) 0%, var(--color-brand) 100%);
 		transition: width 0.25s ease-out;
 	}
 
@@ -111,8 +111,8 @@
 		gap: 0.75rem;
 		padding: 0.65rem 0.75rem;
 		border-radius: 8px;
-		background: #ffffff;
-		border: 1px solid #f3d8c6;
+		background: var(--color-surface);
+		border: 1px solid var(--color-queue-item-border);
 	}
 
 	.queue-item.read {
@@ -123,7 +123,7 @@
 		min-width: 2.4rem;
 		font-size: 0.82rem;
 		font-weight: 700;
-		color: #ab6a3f;
+		color: var(--color-queue-rank);
 	}
 
 	.queue-story {
@@ -132,19 +132,19 @@
 	}
 
 	.queue-story a {
-		color: #2d2d2d;
+		color: var(--color-queue-link);
 		text-decoration: none;
 		font-weight: 600;
 		line-height: 1.25;
 	}
 
 	.queue-story a:hover {
-		color: #cc5a00;
+		color: var(--color-accent-text-strong);
 	}
 
 	.queue-story span {
 		font-size: 0.8rem;
-		color: #7c5f4a;
+		color: var(--color-queue-meta);
 	}
 
 	@media (max-width: 640px) {

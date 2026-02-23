@@ -6,11 +6,14 @@ import type { TimeRange } from '$lib/hn-client';
 import {
 	PREFERENCE_COOKIE_KEYS,
 	PREFERENCE_STORAGE_KEYS,
+	THEME_MODES,
 	encodeHideReadPreference,
 	isPreferredRange,
 	isSortMode,
+	isThemeMode,
 	parseHideReadPreference,
-	type SortMode
+	type SortMode,
+	type ThemeMode
 } from '$lib/preferences';
 import {
 	PREFERENCE_COOKIE_MAX_AGE_SECONDS
@@ -22,6 +25,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		selectedTimeRange: initial.timeRange,
 		selectedSortMode: initial.sortMode,
 		hideReadStories: initial.hideRead,
+		selectedThemeMode: initial.themeMode,
 		hasHydratedPreferences: false
 	});
 
@@ -47,10 +51,28 @@ export function createPreferencesController(initial: FeedPreferences) {
 			PREFERENCE_STORAGE_KEYS.hideRead,
 			encodeHideReadPreference(state.hideReadStories)
 		);
+		localStorage.setItem(PREFERENCE_STORAGE_KEYS.theme, state.selectedThemeMode);
 
 		document.cookie = `${PREFERENCE_COOKIE_KEYS.range}=${state.selectedTimeRange}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
 		document.cookie = `${PREFERENCE_COOKIE_KEYS.sortMode}=${state.selectedSortMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
 		document.cookie = `${PREFERENCE_COOKIE_KEYS.hideRead}=${encodeHideReadPreference(state.hideReadStories)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+		document.cookie = `${PREFERENCE_COOKIE_KEYS.theme}=${state.selectedThemeMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+	}
+
+	function applyThemeToDom(theme: ThemeMode): void {
+		if (theme === 'system') {
+			document.documentElement.removeAttribute('data-theme');
+		} else {
+			document.documentElement.setAttribute('data-theme', theme);
+		}
+	}
+
+	function cycleTheme(): void {
+		const nextIndex = (THEME_MODES.indexOf(state.selectedThemeMode) + 1) % THEME_MODES.length;
+		state.selectedThemeMode = THEME_MODES[nextIndex];
+		applyThemeToDom(state.selectedThemeMode);
+		if (!browser || !state.hasHydratedPreferences) return;
+		persistPreferenceState();
 	}
 
 	function replacePreferenceQueryWithoutReload(): void {
@@ -99,6 +121,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		state.selectedTimeRange = next.timeRange;
 		state.selectedSortMode = next.sortMode;
 		state.hideReadStories = next.hideRead;
+		state.selectedThemeMode = next.themeMode;
 	}
 
 	$effect(() => {
@@ -108,6 +131,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		const storedRange = localStorage.getItem(PREFERENCE_STORAGE_KEYS.range);
 		const storedSortMode = localStorage.getItem(PREFERENCE_STORAGE_KEYS.sortMode);
 		const storedHideRead = localStorage.getItem(PREFERENCE_STORAGE_KEYS.hideRead);
+		const storedTheme = localStorage.getItem(PREFERENCE_STORAGE_KEYS.theme);
 
 		let shouldNavigate = false;
 		if (
@@ -126,6 +150,11 @@ export function createPreferencesController(initial: FeedPreferences) {
 		const parsedStoredHideRead = parseHideReadPreference(storedHideRead);
 		if (!searchParams.has('hideRead') && parsedStoredHideRead !== null) {
 			state.hideReadStories = parsedStoredHideRead;
+		}
+
+		if (isThemeMode(storedTheme) && storedTheme !== state.selectedThemeMode) {
+			state.selectedThemeMode = storedTheme;
+			applyThemeToDom(storedTheme);
 		}
 
 		state.hasHydratedPreferences = true;
@@ -154,6 +183,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		selectTimeRange,
 		selectSortMode,
 		toggleHideRead,
+		cycleTheme,
 		syncFromServer
 	};
 }

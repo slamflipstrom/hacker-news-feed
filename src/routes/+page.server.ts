@@ -6,8 +6,10 @@ import {
 import {
   DEFAULT_HIDE_READ,
   DEFAULT_SORT_MODE,
+  DEFAULT_THEME_MODE,
   PREFERENCE_COOKIE_KEYS,
   isSortMode,
+  isThemeMode,
   parseHideReadPreference,
 } from "$lib/preferences";
 import type { PageServerLoad } from "./$types";
@@ -36,6 +38,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
   const storedHideRead = url.searchParams.has("hideRead")
     ? null
     : cookies.get(PREFERENCE_COOKIE_KEYS.hideRead) ?? null;
+  const storedTheme = cookies.get(PREFERENCE_COOKIE_KEYS.theme) ?? null;
 
   const resolvedRange =
     (isTimeRange(rawRange) && rawRange) ||
@@ -49,6 +52,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
     parseHideReadPreference(rawHideRead) ??
     parseHideReadPreference(storedHideRead) ??
     DEFAULT_HIDE_READ;
+  const resolvedTheme = isThemeMode(storedTheme) ? storedTheme : DEFAULT_THEME_MODE;
   const timeRange = resolvedRange;
 
   cookies.set(PREFERENCE_COOKIE_KEYS.range, resolvedRange, {
@@ -62,6 +66,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
     sameSite: "lax",
   });
   cookies.set(PREFERENCE_COOKIE_KEYS.hideRead, resolvedHideRead ? "1" : "0", {
+    path: "/",
+    maxAge: PREFERENCE_COOKIE_MAX_AGE_SECONDS,
+    sameSite: "lax",
+  });
+  cookies.set(PREFERENCE_COOKIE_KEYS.theme, resolvedTheme, {
     path: "/",
     maxAge: PREFERENCE_COOKIE_MAX_AGE_SECONDS,
     sameSite: "lax",
@@ -80,6 +89,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
       timeRange,
       sortMode: resolvedSortMode,
       hideRead: resolvedHideRead,
+      themeMode: resolvedTheme,
       storiesLimit: STORIES_LIMIT,
       error: null,
     };
@@ -102,6 +112,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
       timeRange,
       sortMode: resolvedSortMode,
       hideRead: resolvedHideRead,
+      themeMode: resolvedTheme,
       storiesLimit: STORIES_LIMIT,
       error: "Could not load stories right now. Please try again shortly.",
     };
