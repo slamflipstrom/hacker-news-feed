@@ -29,18 +29,29 @@ export function createPreferencesController(initial: FeedPreferences) {
 		hasHydratedPreferences: false
 	});
 
-	function getQueryForPreferences(timeRange: TimeRange, sortMode: SortMode, hideRead: boolean): string {
+	function getQueryForPreferences(
+		timeRange: TimeRange,
+		sortMode: SortMode,
+		hideRead: boolean,
+		themeMode: ThemeMode
+	): string {
 		const params = new URLSearchParams();
 		params.set('range', timeRange);
 		params.set('sort', sortMode);
 		if (hideRead) {
 			params.set('hideRead', '1');
 		}
+		params.set('theme', themeMode);
 		return params.toString();
 	}
 
 	function getRangeHref(timeRange: TimeRange): string {
-		const query = getQueryForPreferences(timeRange, state.selectedSortMode, state.hideReadStories);
+		const query = getQueryForPreferences(
+			timeRange,
+			state.selectedSortMode,
+			state.hideReadStories,
+			state.selectedThemeMode
+		);
 		return `${resolve('/')}?${query}`;
 	}
 
@@ -72,6 +83,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		state.selectedThemeMode = THEME_MODES[nextIndex];
 		applyThemeToDom(state.selectedThemeMode);
 		if (!browser || !state.hasHydratedPreferences) return;
+		replacePreferenceQueryWithoutReload();
 		persistPreferenceState();
 	}
 
@@ -80,7 +92,8 @@ export function createPreferencesController(initial: FeedPreferences) {
 		const query = getQueryForPreferences(
 			state.selectedTimeRange,
 			state.selectedSortMode,
-			state.hideReadStories
+			state.hideReadStories,
+			state.selectedThemeMode
 		);
 		nextUrl.search = query;
 		try {
@@ -152,10 +165,10 @@ export function createPreferencesController(initial: FeedPreferences) {
 			state.hideReadStories = parsedStoredHideRead;
 		}
 
-		if (isThemeMode(storedTheme) && storedTheme !== state.selectedThemeMode) {
+		if (!searchParams.has('theme') && isThemeMode(storedTheme) && storedTheme !== state.selectedThemeMode) {
 			state.selectedThemeMode = storedTheme;
-			applyThemeToDom(storedTheme);
 		}
+		applyThemeToDom(state.selectedThemeMode);
 
 		state.hasHydratedPreferences = true;
 		persistPreferenceState();

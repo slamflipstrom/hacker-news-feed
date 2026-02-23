@@ -29,6 +29,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
   const rawRange = url.searchParams.get("range");
   const rawSortMode = url.searchParams.get("sort");
   const rawHideRead = url.searchParams.get("hideRead");
+  const rawTheme = url.searchParams.get("theme");
   const storedRange = url.searchParams.has("range")
     ? null
     : cookies.get(PREFERENCE_COOKIE_KEYS.range) ?? null;
@@ -38,7 +39,9 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
   const storedHideRead = url.searchParams.has("hideRead")
     ? null
     : cookies.get(PREFERENCE_COOKIE_KEYS.hideRead) ?? null;
-  const storedTheme = cookies.get(PREFERENCE_COOKIE_KEYS.theme) ?? null;
+  const storedTheme = url.searchParams.has("theme")
+    ? null
+    : cookies.get(PREFERENCE_COOKIE_KEYS.theme) ?? null;
 
   const resolvedRange =
     (isTimeRange(rawRange) && rawRange) ||
@@ -52,7 +55,10 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
     parseHideReadPreference(rawHideRead) ??
     parseHideReadPreference(storedHideRead) ??
     DEFAULT_HIDE_READ;
-  const resolvedTheme = isThemeMode(storedTheme) ? storedTheme : DEFAULT_THEME_MODE;
+  const resolvedTheme =
+    (isThemeMode(rawTheme) && rawTheme) ||
+    (isThemeMode(storedTheme) && storedTheme) ||
+    DEFAULT_THEME_MODE;
   const timeRange = resolvedRange;
 
   cookies.set(PREFERENCE_COOKIE_KEYS.range, resolvedRange, {
@@ -99,6 +105,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
       timeRange,
       sortMode: resolvedSortMode,
       hideRead: resolvedHideRead,
+      themeMode: resolvedTheme,
       error: error instanceof Error ? error.message : String(error),
       durationMs: duration,
     });

@@ -1,5 +1,7 @@
 /* === CSS custom properties — light mode defaults === */
 :root {
+	color-scheme: light;
+
 	/* Page & surfaces */
 	--color-page-bg: #ffffff;
 	--color-surface: #ffffff;
@@ -64,6 +66,8 @@
 
 /* === Dark mode overrides === */
 [data-theme='dark'] {
+	color-scheme: dark;
+
 	--color-page-bg: #111111;
 	--color-surface: #1e1e1e;
 	--color-surface-subtle: #262626;
@@ -117,6 +121,8 @@
 /* === System preference dark mode (when no explicit theme is set) === */
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']):not([data-theme='dark']) {
+		color-scheme: dark;
+
 		--color-page-bg: #111111;
 		--color-surface: #1e1e1e;
 		--color-surface-subtle: #262626;

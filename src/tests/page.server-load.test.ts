@@ -82,15 +82,20 @@ describe("+page.server load", () => {
       [PREFERENCE_COOKIE_KEYS.range]: "30d",
       [PREFERENCE_COOKIE_KEYS.sortMode]: "top",
       [PREFERENCE_COOKIE_KEYS.hideRead]: "0",
+      [PREFERENCE_COOKIE_KEYS.theme]: "dark",
     });
 
-    const { event, headers } = createLoadEvent("/?range=7d&sort=comments&hideRead=1", cookies);
+    const { event, headers } = createLoadEvent(
+      "/?range=7d&sort=comments&hideRead=1&theme=light",
+      cookies
+    );
     const data = await runLoad(event);
 
     expect(mockGetStories).toHaveBeenCalledWith("7d", 100);
     expect(data.timeRange).toBe("7d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(true);
+    expect(data.themeMode).toBe("light");
     expect(headers["Cache-Control"]).toBe("public, max-age=600, stale-while-revalidate=60");
 
     expect(cookies.setCalls).toEqual(
@@ -98,6 +103,7 @@ describe("+page.server load", () => {
         expect.objectContaining({ name: PREFERENCE_COOKIE_KEYS.range, value: "7d" }),
         expect.objectContaining({ name: PREFERENCE_COOKIE_KEYS.sortMode, value: "comments" }),
         expect.objectContaining({ name: PREFERENCE_COOKIE_KEYS.hideRead, value: "1" }),
+        expect.objectContaining({ name: PREFERENCE_COOKIE_KEYS.theme, value: "light" }),
       ])
     );
   });
@@ -108,6 +114,7 @@ describe("+page.server load", () => {
       [PREFERENCE_COOKIE_KEYS.range]: "30d",
       [PREFERENCE_COOKIE_KEYS.sortMode]: "comments",
       [PREFERENCE_COOKIE_KEYS.hideRead]: "0",
+      [PREFERENCE_COOKIE_KEYS.theme]: "dark",
     });
 
     const { event, headers } = createLoadEvent("/", cookies);
@@ -117,6 +124,7 @@ describe("+page.server load", () => {
     expect(data.timeRange).toBe("30d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(false);
+    expect(data.themeMode).toBe("dark");
     expect(headers["Cache-Control"]).toBe("public, max-age=900, stale-while-revalidate=60");
   });
 
@@ -126,15 +134,20 @@ describe("+page.server load", () => {
       [PREFERENCE_COOKIE_KEYS.range]: "90d",
       [PREFERENCE_COOKIE_KEYS.sortMode]: "new",
       [PREFERENCE_COOKIE_KEYS.hideRead]: "maybe",
+      [PREFERENCE_COOKIE_KEYS.theme]: "dark",
     });
 
-    const { event, headers } = createLoadEvent("/?range=bad&sort=new&hideRead=wat", cookies);
+    const { event, headers } = createLoadEvent(
+      "/?range=bad&sort=new&hideRead=wat&theme=neon",
+      cookies
+    );
     const data = await runLoad(event);
 
     expect(mockGetStories).toHaveBeenCalledWith("24h", 100);
     expect(data.timeRange).toBe("24h");
     expect(data.sortMode).toBe("top");
     expect(data.hideRead).toBe(false);
+    expect(data.themeMode).toBe("system");
     expect(headers["Cache-Control"]).toBe("public, max-age=300, stale-while-revalidate=60");
   });
 

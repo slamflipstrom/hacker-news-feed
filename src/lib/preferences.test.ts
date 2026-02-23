@@ -3,6 +3,7 @@ import {
   encodeHideReadPreference,
   isPreferredRange,
   isSortMode,
+  isThemeMode,
   parseHideReadPreference,
 } from "./preferences";
 
@@ -12,6 +13,14 @@ describe("preferences helpers", () => {
     expect(isSortMode("comments")).toBe(true);
     expect(isSortMode("new")).toBe(false);
     expect(isSortMode(null)).toBe(false);
+  });
+
+  it("validates supported theme modes", () => {
+    expect(isThemeMode("system")).toBe(true);
+    expect(isThemeMode("light")).toBe(true);
+    expect(isThemeMode("dark")).toBe(true);
+    expect(isThemeMode("night")).toBe(false);
+    expect(isThemeMode(null)).toBe(false);
   });
 
   it("validates preferred time ranges", () => {

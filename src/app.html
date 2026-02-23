@@ -3,13 +3,46 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
 		<script>
 			(function () {
 				try {
-					var m = document.cookie.match(/(?:^|;\s*)hnrss_theme=([^;]+)/);
-					var t = m && m[1];
-					if (t === 'light' || t === 'dark') {
-						document.documentElement.setAttribute('data-theme', t);
+					var params = new URLSearchParams(window.location.search);
+					var hasThemeParam = params.has('theme');
+					var queryTheme = params.get('theme');
+
+					var storedTheme = null;
+					try {
+						storedTheme = window.localStorage.getItem('hnrss:preferred-theme');
+					} catch (error) {}
+
+					var match = document.cookie.match(/(?:^|;\s*)hnrss_theme=([^;]+)/);
+					var cookieTheme = match && decodeURIComponent(match[1]);
+
+					var resolvedTheme = 'system';
+					if (hasThemeParam) {
+						resolvedTheme =
+							queryTheme === 'light' || queryTheme === 'dark' || queryTheme === 'system'
+								? queryTheme
+								: 'system';
+					} else if (
+						storedTheme === 'light' ||
+						storedTheme === 'dark' ||
+						storedTheme === 'system'
+					) {
+						resolvedTheme = storedTheme;
+					} else if (
+						cookieTheme === 'light' ||
+						cookieTheme === 'dark' ||
+						cookieTheme === 'system'
+					) {
+						resolvedTheme = cookieTheme;
+					}
+
+					if (resolvedTheme === 'light' || resolvedTheme === 'dark') {
+						document.documentElement.setAttribute('data-theme', resolvedTheme);
+					} else {
+						document.documentElement.removeAttribute('data-theme');
 					}
 				} catch (e) {}
 			})();

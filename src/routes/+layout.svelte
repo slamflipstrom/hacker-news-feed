@@ -1,16 +1,24 @@
 <script lang="ts">
 	import '../app.css';
 	import { browser } from '$app/environment';
+	import { isThemeMode, PREFERENCE_STORAGE_KEYS } from '$lib/preferences';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: import('svelte').Snippet } = $props();
 
 	$effect(() => {
 		if (!browser) return;
-		const theme = data.theme;
+		const searchParams = new URLSearchParams(window.location.search);
+		let theme = data.theme;
+		if (!searchParams.has('theme')) {
+			const storedTheme = localStorage.getItem(PREFERENCE_STORAGE_KEYS.theme);
+			if (isThemeMode(storedTheme)) {
+				theme = storedTheme;
+			}
+		}
 		const root = document.documentElement;
 		if (theme === 'system') {
-			delete root.dataset.theme;
+			root.removeAttribute('data-theme');
 		} else {
 			root.dataset.theme = theme;
 		}

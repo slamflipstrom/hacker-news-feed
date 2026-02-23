@@ -190,12 +190,12 @@ Address the P1 dark-mode gaps:
 - [x] Update pre-hydration script in `src/app.html` to resolve theme from query, then localStorage, then cookie.
 - [x] Add `color-scheme` metadata and CSS behavior to align browser chrome with active theme.
 - [x] Add/extend tests for theme precedence and persistence behavior.
-- [ ] Run `pnpm typecheck`.
-- [ ] Run `pnpm test:unit`.
-- [ ] Run `pnpm test:e2e`.
+- [x] Run `pnpm typecheck`.
+- [x] Run `pnpm test:unit`.
+- [x] Run `pnpm test:e2e`.
 
 ## Review
-Status: In progress.
+Status: Completed.
 
 ---
 
