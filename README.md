@@ -87,6 +87,14 @@ Keep live mode optional/manual for diagnostics:
 pnpm test:e2e:live
 ```
 
+### GitHub Required Check Gate
+
+This repo includes GitHub Actions workflow `CI` at `./.github/workflows/ci.yml` that runs:
+
+- `pnpm typecheck`
+- `pnpm test:unit`
+- `pnpm test:e2e` (deterministic mock mode)
+
 ## Cloudflare Deployment
 
 This project targets Cloudflare Pages + Functions via `@sveltejs/adapter-cloudflare`.

@@ -110,3 +110,27 @@ Status: Completed.
 - `pnpm typecheck` passed.
 - `pnpm test:unit` passed (`23` tests).
 - `pnpm test:e2e` passed (`9` tests, deterministic mock mode).
+
+---
+
+# CI Deploy Gate Setup (2026-02-23)
+
+## Objective
+Ensure `typecheck`, unit tests, and deterministic e2e run in CI and can be enforced as a required gate before Cloudflare production deploys.
+
+## Plan
+- [x] Add GitHub Actions workflow that runs `pnpm typecheck`, `pnpm test:unit`, and `pnpm test:e2e` on PRs and pushes to `main`.
+- [x] Install Playwright Chromium in CI so e2e is runnable on GitHub-hosted runners.
+- [x] Upload Playwright artifacts on failures for debugging.
+- [x] Update README with explicit required-check gating steps for Cloudflare deploy safety.
+
+## Review
+Status: Completed.
+
+### What changed
+- Added workflow: `.github/workflows/ci.yml` (`CI` job `Typecheck + Unit + E2E`).
+- Updated `README.md` with required-check setup instructions for `main`.
+
+### Verification
+- Workflow and README changes were validated via file inspection.
+- No application runtime code was modified.
