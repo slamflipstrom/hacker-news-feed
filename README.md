@@ -5,7 +5,7 @@ A focused SvelteKit reader for high-signal Hacker News stories.
 ## Features
 
 - Top **20** stories in `24h`, `7d`, or `30d` windows
-- Sorting modes: `Top`, `Newest`, `Most Commented`
+- Sorting modes: `Top`, `Most Discussed`
 - Read flow UX: queue, read/save state, and quick actions (`Open`, `Save`, `Skip`)
 - Keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read
 - Persistent preferences (`range`, `sort`, `hideRead`) across visits
@@ -144,5 +144,5 @@ For Git-integrated Pages deploys, do **not** set a custom deploy command such as
 ## Query Params
 
 - `range`: `24h | 7d | 30d`
-- `sort`: `top | new | comments`
+- `sort`: `top | comments`
 - `hideRead`: `1` to show only unread stories

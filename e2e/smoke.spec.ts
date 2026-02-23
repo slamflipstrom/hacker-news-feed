@@ -49,20 +49,7 @@ test.describe("HN-RSS smoke", () => {
     await appRoot(page)
       .getByRole("group", { name: "Sort stories" })
       .first()
-      .getByRole("button", { name: "Newest", exact: true })
-      .first()
-      .click();
-    await expect(page).toHaveURL(/sort=new/);
-    const newestFirstTitle = (await firstStoryTitleLocator(page).innerText()).trim();
-    expect(newestFirstTitle.length).toBeGreaterThan(0);
-    if (!IS_LIVE_E2E) {
-      expect(newestFirstTitle).toBe("Fresh Flash Dispatch");
-    }
-
-    await appRoot(page)
-      .getByRole("group", { name: "Sort stories" })
-      .first()
-      .getByRole("button", { name: "Most Commented", exact: true })
+      .getByRole("button", { name: "Most Discussed", exact: true })
       .first()
       .click();
     await expect(page).toHaveURL(/sort=comments/);

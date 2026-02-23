@@ -8,6 +8,8 @@ const MAX_HITS_PER_PAGE = 200;
 const fixturePath = new URL("../fixtures/algolia/stories.json", import.meta.url);
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
 const baseStories = Array.isArray(fixture.stories) ? fixture.stories : [];
+const RESPONSE_MODES = new Set(["normal", "empty", "error500"]);
+let responseMode = "normal";
 
 function getPort() {
   const index = process.argv.indexOf("--port");
@@ -81,7 +83,23 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function setResponseMode(nextMode) {
+  if (RESPONSE_MODES.has(nextMode)) {
+    responseMode = nextMode;
+    return true;
+  }
+
+  return false;
+}
+
 function handleSearch(requestUrl, response) {
+  if (responseMode === "error500") {
+    sendJson(response, 500, {
+      error: "Injected server failure",
+    });
+    return;
+  }
+
   const page = Math.max(0, Number.parseInt(requestUrl.searchParams.get("page") ?? "0", 10) || 0);
   const rawHitsPerPage = Number.parseInt(requestUrl.searchParams.get("hitsPerPage") ?? "20", 10) || 20;
   const hitsPerPage = Math.max(1, Math.min(MAX_HITS_PER_PAGE, rawHitsPerPage));
@@ -97,7 +115,10 @@ function handleSearch(requestUrl, response) {
   }
 
   const numericFilters = parseNumericFilters(requestUrl.searchParams);
-  const stories = applyNumericFilters(materializeStories(), numericFilters);
+  const stories =
+    responseMode === "empty"
+      ? []
+      : applyNumericFilters(materializeStories(), numericFilters);
 
   const start = page * hitsPerPage;
   const end = start + hitsPerPage;
@@ -114,6 +135,16 @@ function handleSearch(requestUrl, response) {
 const server = http.createServer((request, response) => {
   const method = request.method ?? "GET";
   const requestUrl = new URL(request.url ?? "/", `http://${HOST}:${getPort()}`);
+
+  if (method === "GET" && requestUrl.pathname === "/__mode") {
+    const mode = requestUrl.searchParams.get("value");
+    const ok = setResponseMode(mode ?? "");
+    sendJson(response, ok ? 200 : 400, {
+      mode: responseMode,
+      allowedModes: Array.from(RESPONSE_MODES),
+    });
+    return;
+  }
 
   if (method === "GET" && requestUrl.pathname === "/api/v1/search") {
     handleSearch(requestUrl, response);

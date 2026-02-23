@@ -10,6 +10,8 @@
     "prepare": "svelte-kit sync || echo ''",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:live": "E2E_USE_LIVE=1 playwright test",
     "test:e2e:headed": "playwright test --headed",
@@ -25,6 +27,7 @@
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.0.0",
+    "vitest": "^3.2.4",
     "vite": "^7.0.4",
     "wrangler": "^4.67.0"
   }
