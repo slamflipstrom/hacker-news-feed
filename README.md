@@ -6,9 +6,10 @@ A focused SvelteKit reader for high-signal Hacker News stories.
 
 - Top **20** stories in `24h`, `7d`, or `30d` windows
 - Sorting modes: `Top`, `Most Discussed`
+- Theme modes: `System`, `Light`, `Dark`
 - Read flow UX: queue, read/save state, and quick actions (`Open`, `Save`, `Skip`)
 - Keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read, `t` toggle sort, `r` cycle range
-- Persistent preferences (`range`, `sort`, `hideRead`) across visits
+- Persistent preferences (`range`, `sort`, `hideRead`, `theme`) across URL, cookie, and localStorage
 - Mobile-friendly UI
 
 ## Quick Start
@@ -38,6 +39,8 @@ The server fetches stories from the Algolia HN Search API (`tags=story`) with:
 - Multi-page fetch/dedupe before returning top results
 
 Client-side controls then apply sort and hide-read filtering.
+
+Preference resolution order is query param first, then cookie, then defaults.
 
 ## Feed Architecture
 
@@ -147,6 +150,7 @@ For Git-integrated Pages deploys, do **not** set a custom deploy command such as
 
 - Confirm `Cache-Control` headers on SSR responses.
 - Verify preference cookies are set (`range`, `sort`, `hideRead`).
+- Verify theme cookie is set (`theme`) and URL/query theme persistence works.
 - Enable Pages/Workers logs and alerts for elevated `5xx` rates.
 
 ## Query Params
@@ -154,3 +158,4 @@ For Git-integrated Pages deploys, do **not** set a custom deploy command such as
 - `range`: `24h | 7d | 30d`
 - `sort`: `top | comments`
 - `hideRead`: `1` to show only unread stories
+- `theme`: `system | light | dark`

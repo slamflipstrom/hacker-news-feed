@@ -199,6 +199,25 @@ Status: Completed.
 
 ---
 
+# Dark Mode P2 Follow-up (2026-02-23)
+
+## Objective
+Close remaining medium-priority dark-mode gaps:
+- document theme behavior and query contract in README
+- add explicit browser-level cookie persistence assertion for theme in e2e
+
+## Plan
+- [x] Add theme persistence and precedence details to `README.md`.
+- [x] Add `theme` query parameter docs to `README.md`.
+- [x] Extend `e2e/preferences-persistence.spec.ts` for stronger theme persistence assertions (URL + DOM after reload).
+- [x] Keep theme-cookie write assertions in server unit tests (`src/tests/page.server-load.test.ts`) because `HttpOnly` cookies are not reliably introspectable from e2e.
+- [x] Run `pnpm test:e2e --grep "preferences persistence"`.
+
+## Review
+Status: Completed.
+
+---
+
 # CI pnpm Version Hotfix (2026-02-23)
 
 ## Objective

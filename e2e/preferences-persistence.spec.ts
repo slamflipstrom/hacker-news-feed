@@ -78,6 +78,11 @@ test.describe("preferences persistence", () => {
     await expect(page).toHaveURL(/theme=light/);
     await expect(appRoot(page).getByRole("button", { name: "Unread only" })).toBeVisible();
     await expect(appRoot(page).getByRole("button", { name: /Cycle theme: current is light/i })).toBeVisible();
+    await expect
+      .poll(async () => {
+        return page.evaluate(() => document.documentElement.getAttribute("data-theme"));
+      })
+      .toBe("light");
   });
 
   test("query params override stored preferences", async ({ page }) => {
