@@ -39,6 +39,25 @@ The server fetches stories from the Algolia HN Search API (`tags=story`) with:
 
 Client-side controls then apply sort and hide-read filtering.
 
+## Feed Architecture
+
+The feed UI is split into a feature-oriented structure under:
+
+- `./src/lib/features/feed/components`
+- `./src/lib/features/feed/*.svelte.ts`
+- `./src/lib/features/feed/story-utils.ts`
+
+Route responsibilities:
+
+- `./src/routes/+page.server.ts` handles data loading and preference resolution
+- `./src/routes/+page.svelte` is an orchestration container only
+
+Feature responsibilities:
+
+- Components in `./src/lib/features/feed/components` handle presentation
+- Controllers in `.svelte.ts` files manage page-scoped reactive state for preferences, read/saved story state, and keyboard navigation
+- `./src/lib/features/feed/story-utils.ts` contains pure helper functions for sorting and story metadata/link handling
+
 ## End-to-End Testing
 
 Playwright is deterministic by default. `pnpm test:e2e` starts:
@@ -93,7 +112,7 @@ pnpm cf:preview
 - Framework preset: `SvelteKit`
 - Build command: `pnpm build`
 - Build output directory: `.svelte-kit/cloudflare`
-- Deploy command: *(leave empty / unset)*
+- Deploy command: _(leave empty / unset)_
 - Production branch: `main`
 - Node version: `20` or newer
 - Preview deploys: enabled for non-`main` branches

@@ -68,7 +68,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
   });
 
   try {
-    const stories = await getStoriesInTimeRange(timeRange, STORIES_LIMIT);
+    const stories = await getStoriesInTimeRange(timeRange, STORIES_LIMIT * 5);
     const maxAge = CACHE_SECONDS[timeRange];
 
     setHeaders({
