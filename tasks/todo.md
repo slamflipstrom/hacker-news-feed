@@ -134,3 +134,22 @@ Status: Completed.
 ### Verification
 - Workflow and README changes were validated via file inspection.
 - No application runtime code was modified.
+
+---
+
+# CI pnpm Version Hotfix (2026-02-23)
+
+## Objective
+Fix failing GitHub Actions setup step by providing an explicit pnpm version source.
+
+## Plan
+- [x] Set `version` for `pnpm/action-setup@v4` in `.github/workflows/ci.yml`.
+- [x] Add `packageManager` pin in `package.json`.
+- [x] Record the correction in `tasks/lessons.md`.
+
+## Review
+Status: Completed.
+
+### Verification
+- Workflow now contains `with: version: 10.30.0` for `pnpm/action-setup@v4`.
+- `package.json` now includes `"packageManager": "pnpm@10.30.0"`.

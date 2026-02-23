@@ -8,7 +8,7 @@ HN-RSS is a SvelteKit app that fetches high-signal Hacker News stories and helps
 
 - Fetches up to **20 stories** in selected time windows: `24h`, `7d`, `30d`
 - Uses Algolia HN Search API with filters: `created_at_i > cutoff` and `points > 10`
-- Supports sorting (`top`, `new`, `comments`) and hiding read stories
+- Supports sorting (`top`, `comments`) and hiding read stories
 - Includes persistent read/saved state and keyboard-driven navigation
 
 ## Development Commands
@@ -20,6 +20,7 @@ This project uses `pnpm`.
 - `pnpm preview` previews the production build
 - `pnpm typecheck` runs `svelte-check`
 - `pnpm check:watch` runs `svelte-check` in watch mode
+- CI guardrail: when using `pnpm/action-setup`, always specify a pnpm version in workflow `with.version` and keep `packageManager` pinned in `package.json`.
 
 ## Architecture
 
@@ -53,7 +54,7 @@ This project uses `pnpm`.
 ### Query Parameters
 
 - `range`: `24h | 7d | 30d`
-- `sort`: `top | new | comments`
+- `sort`: `top | comments`
 - `hideRead`: `1` to hide read stories (absent means show all)
 
 ## Key Types
