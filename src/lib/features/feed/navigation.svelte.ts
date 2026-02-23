@@ -63,9 +63,8 @@ export function createNavigationController(deps: NavigationDependencies) {
 
 	function handleKeyboardShortcuts(event: KeyboardEvent): void {
 		if (event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
-		if (isInteractiveTarget(event.target)) return;
-
 		const key = event.key.toLowerCase();
+		if (isInteractiveTarget(event.target) && key !== 'j' && key !== 'k') return;
 		if (key === 't') {
 			event.preventDefault();
 			deps.onToggleSortMode();

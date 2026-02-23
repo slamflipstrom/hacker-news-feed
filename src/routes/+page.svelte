@@ -22,12 +22,21 @@
 	});
 	const storyState = createStoryStateController();
 	let showKeyboardShortcuts = $state(false);
+	let showingSavedStories = $state(false);
+
+	let savedStories = $derived.by(() =>
+		sortStories(storyState.getSavedStories(), preferences.state.selectedSortMode)
+	);
 
 	let displayedStories = $derived.by(() => {
-		const sortedStories = sortStories(props.data.stories, preferences.state.selectedSortMode)
-			.slice(0, props.data.storiesLimit);
-		if (!preferences.state.hideReadStories) return sortedStories;
-		return sortedStories.filter((story) => !storyState.isStoryRead(story.objectID));
+		const baseStories = showingSavedStories
+			? savedStories
+			: sortStories(props.data.stories, preferences.state.selectedSortMode).slice(
+					0,
+					props.data.storiesLimit
+				);
+		if (!preferences.state.hideReadStories) return baseStories;
+		return baseStories.filter((story) => !storyState.isStoryRead(story.objectID));
 	});
 
 	function openStory(story: HNStory): void {
@@ -74,6 +83,16 @@
 		showKeyboardShortcuts = !showKeyboardShortcuts;
 	}
 
+	function showAllStories(): void {
+		showingSavedStories = false;
+		navigation.resetActiveStoryIndex();
+	}
+
+	function showSavedStories(): void {
+		showingSavedStories = true;
+		navigation.resetActiveStoryIndex();
+	}
+
 	const navigation = createNavigationController({
 		getDisplayedStories: () => displayedStories,
 		getStoryElementId,
@@ -91,6 +110,10 @@
 		preferences.state.hideReadStories = props.data.hideRead;
 		preferences.state.selectedThemeMode = props.data.themeMode;
 	});
+
+	$effect(() => {
+		storyState.upsertSavedStories(props.data.stories);
+	});
 </script>
 
 <svelte:window onkeydown={navigation.handleKeyboardShortcuts} />
@@ -98,6 +121,8 @@
 <div class="container">
 	<FeedHeader
 		storiesLimit={props.data.storiesLimit}
+		showingSavedOnly={showingSavedStories}
+		savedStoriesCount={savedStories.length}
 		timeRanges={TIME_RANGE_OPTIONS}
 		sortModes={SORT_MODE_OPTIONS}
 		selectedTimeRange={preferences.state.selectedTimeRange}
@@ -109,6 +134,8 @@
 		onSelectTimeRange={preferences.selectTimeRange}
 		onSelectSortMode={selectSortMode}
 		onToggleHideRead={toggleHideRead}
+		onShowAllStories={showAllStories}
+		onShowSavedStories={showSavedStories}
 		onCycleTheme={preferences.cycleTheme}
 		onToggleKeyboardShortcuts={toggleKeyboardShortcuts}
 	/>
@@ -118,16 +145,26 @@
 			<p class="error-message">{props.data.error}</p>
 		{/if}
 
-		{#if props.data.stories.length === 0}
+		{#if !showingSavedStories && props.data.stories.length === 0}
 			<EmptyState message="No stories found in this time range." />
 		{:else if displayedStories.length === 0}
-			<EmptyState message="No stories match these filters." />
-		{:else}
-			<QueueSection
-				stories={displayedStories}
-				isStoryRead={storyState.isStoryRead}
-				onMarkRead={storyState.markStoryRead}
+			<EmptyState
+				message={
+					showingSavedStories
+						? savedStories.length === 0
+							? 'No saved stories yet.'
+							: 'No saved stories match these filters.'
+						: 'No stories match these filters.'
+				}
 			/>
+		{:else}
+			{#if !showingSavedStories}
+				<QueueSection
+					stories={displayedStories}
+					isStoryRead={storyState.isStoryRead}
+					onMarkRead={storyState.markStoryRead}
+				/>
+			{/if}
 			<StoryList
 				stories={displayedStories}
 				activeStoryIndex={navigation.state.activeStoryIndex}

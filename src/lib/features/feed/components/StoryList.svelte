@@ -9,7 +9,7 @@
 		isStoryRead: (storyId: string) => boolean;
 		isStorySaved: (storyId: string) => boolean;
 		onMarkRead: (storyId: string) => void;
-		onToggleSave: (storyId: string) => void;
+		onToggleSave: (story: HNStory) => void;
 		onSkip: (storyId: string) => void;
 	}
 

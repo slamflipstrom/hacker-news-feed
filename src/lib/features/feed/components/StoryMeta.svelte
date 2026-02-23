@@ -5,10 +5,9 @@
 	interface Props {
 		story: HNStory;
 		isRead: boolean;
-		isSaved: boolean;
 	}
 
-	let { story, isRead, isSaved }: Props = $props();
+	let { story, isRead }: Props = $props();
 </script>
 
 <div class="story-meta">
@@ -27,9 +26,6 @@
 	<span class="story-author">by {story.author}</span>
 	{#if isRead}
 		<span class="status-badge status-read">Read</span>
-	{/if}
-	{#if isSaved}
-		<span class="status-badge status-saved">Saved</span>
 	{/if}
 </div>
 
@@ -97,8 +93,4 @@
 		color: var(--color-status-read-text);
 	}
 
-	.status-saved {
-		background: var(--color-status-saved-bg);
-		color: var(--color-status-saved-text);
-	}
 </style>

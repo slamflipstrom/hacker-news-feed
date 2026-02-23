@@ -20,7 +20,10 @@ async function gotoHome(page: Page): Promise<void> {
       const savedKey = await page.evaluate(() =>
         window.localStorage.getItem("hnrss:saved-story-ids")
       );
-      return readKey !== null && savedKey !== null;
+      const savedStoriesKey = await page.evaluate(() =>
+        window.localStorage.getItem("hnrss:saved-stories")
+      );
+      return readKey !== null && savedKey !== null && savedStoriesKey !== null;
     })
     .toBe(true);
 }
@@ -77,11 +80,22 @@ test.describe("HN-RSS smoke", () => {
     await appRoot(page).getByRole("button", { name: "Unread only" }).first().click();
     await expect(page).not.toHaveURL(/hideRead=1/);
 
-    const restoredFirstItem = appRoot(page).locator(".story-list .story-item").first();
-    await restoredFirstItem.getByRole("button", { name: "Save" }).click();
-    await expect(
-      restoredFirstItem.getByRole("button", { name: "Saved" })
-    ).toHaveAttribute("aria-pressed", "true");
+    const saveCandidateItem = appRoot(page).locator(".story-list .story-item").nth(1);
+    const savedTitle = (await saveCandidateItem.locator(".story-title a").innerText()).trim();
+    const saveCandidateButton = saveCandidateItem.locator(".story-action-save");
+    await expect(saveCandidateButton).toBeVisible();
+    await saveCandidateButton.click();
+    await expect(saveCandidateButton).toHaveAttribute("aria-pressed", "true");
+
+    await appRoot(page)
+      .getByRole("group", { name: "Story scope" })
+      .getByRole("button", { name: "Saved (1)" })
+      .click();
+    await expect(appRoot(page).getByRole("heading", { name: /Saved Hacker News Stories/i })).toBeVisible();
+    await expect(firstStoryTitleLocator(page)).toHaveText(savedTitle);
+
+    await appRoot(page).locator(".story-list .story-item").first().locator(".story-action-save").click();
+    await expect(appRoot(page).getByText("No saved stories yet.")).toBeVisible();
   });
 
   test("keyboard shortcuts work", async ({ page }) => {
@@ -100,6 +114,8 @@ test.describe("HN-RSS smoke", () => {
     const activeTitle = appRoot(page).locator(".story-list .story-item.active .story-title a");
     const originalActive = (await activeTitle.innerText()).trim();
 
+    // Regression check: j/k should still work after tabbing to interactive controls.
+    await page.keyboard.press("Tab");
     await page.keyboard.press("j");
     await expect
       .poll(async () => (await activeTitle.innerText()).trim())
@@ -107,6 +123,9 @@ test.describe("HN-RSS smoke", () => {
 
     await page.keyboard.press("k");
     await expect(activeTitle).toHaveText(originalActive);
+
+    // Move focus back to non-interactive surface for global action shortcuts.
+    await appRoot(page).click();
 
     const activeItem = appRoot(page).locator(".story-list .story-item.active").first();
     await page.keyboard.press("s");

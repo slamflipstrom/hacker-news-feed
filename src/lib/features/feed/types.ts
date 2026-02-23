@@ -11,7 +11,7 @@ export interface FeedPreferences {
 export interface StoryActions {
 	onOpen: (story: HNStory) => void;
 	onOpenComments: (story: HNStory) => void;
-	onToggleSave: (storyId: string) => void;
+	onToggleSave: (story: HNStory) => void;
 	onMarkRead: (storyId: string) => void;
 	onSkip: (storyId: string) => void;
 }
