@@ -388,3 +388,26 @@ Status: Completed.
 
 ### Verification
 - `pnpm test:e2e --grep "keyboard shortcuts work"` passed.
+
+---
+
+# Keyboard Shortcut Accessibility Controls (2026-02-25)
+
+## Objective
+Add an explicit user setting to enable/disable global keyboard shortcuts and enforce regression coverage for native keyboard activation on controls.
+
+## Plan
+- [x] Add a persisted keyboard-shortcut-enabled preference in client preference state.
+- [x] Gate global keyboard shortcut handling on that preference.
+- [x] Add a UI toggle for `Keyboard shortcuts: On/Off`.
+- [x] Extend e2e keyboard tests to assert disable/enable behavior.
+- [x] Add native keyboard activation checks for focused controls (`Enter`/`Space`).
+- [x] Run verification (`pnpm typecheck`, `pnpm test:unit`, `pnpm test:e2e --grep "keyboard"`).
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm typecheck` passed.
+- `pnpm test:unit` passed.
+- `pnpm test:e2e --grep "keyboard"` passed.

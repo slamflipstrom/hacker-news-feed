@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import type { HNStory } from '$lib/hn-client';
 
 interface NavigationDependencies {
+	areKeyboardShortcutsEnabled: () => boolean;
 	getDisplayedStories: () => HNStory[];
 	getStoryElementId: (storyId: string) => string;
 	onOpenStory: (story: HNStory) => void;
@@ -64,6 +65,7 @@ export function createNavigationController(deps: NavigationDependencies) {
 
 	function handleKeyboardShortcuts(event: KeyboardEvent): void {
 		if (event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
+		if (!deps.areKeyboardShortcutsEnabled()) return;
 		const key = event.key.toLowerCase();
 		if (isInteractiveTarget(event.target) && key !== 'j' && key !== 'k' && key !== 'c') return;
 		if (key === 't') {

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  encodeEnabledPreference,
   encodeHideReadPreference,
+  parseEnabledPreference,
   isPreferredRange,
   isSortMode,
   isThemeMode,
@@ -47,5 +49,19 @@ describe("preferences helpers", () => {
   it("encodes hide-read values", () => {
     expect(encodeHideReadPreference(true)).toBe("1");
     expect(encodeHideReadPreference(false)).toBe("0");
+  });
+
+  it("parses enabled/disabled preference values", () => {
+    expect(parseEnabledPreference("1")).toBe(true);
+    expect(parseEnabledPreference("true")).toBe(true);
+    expect(parseEnabledPreference("0")).toBe(false);
+    expect(parseEnabledPreference("false")).toBe(false);
+    expect(parseEnabledPreference("yes")).toBeNull();
+    expect(parseEnabledPreference(null)).toBeNull();
+  });
+
+  it("encodes enabled/disabled preference values", () => {
+    expect(encodeEnabledPreference(true)).toBe("1");
+    expect(encodeEnabledPreference(false)).toBe("0");
   });
 });

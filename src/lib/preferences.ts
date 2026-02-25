@@ -9,12 +9,14 @@ export type ThemeMode = (typeof THEME_MODES)[number];
 export const DEFAULT_SORT_MODE: SortMode = 'top';
 export const DEFAULT_HIDE_READ = false;
 export const DEFAULT_THEME_MODE: ThemeMode = 'system';
+export const DEFAULT_KEYBOARD_SHORTCUTS_ENABLED = true;
 
 export const PREFERENCE_STORAGE_KEYS = {
 	range: 'hnrss:preferred-range',
 	sortMode: 'hnrss:preferred-sort-mode',
 	hideRead: 'hnrss:preferred-hide-read',
-	theme: 'hnrss:preferred-theme'
+	theme: 'hnrss:preferred-theme',
+	keyboardShortcutsEnabled: 'hnrss:preferred-keyboard-shortcuts-enabled'
 } as const;
 
 export const PREFERENCE_COOKIE_KEYS = {
@@ -44,5 +46,16 @@ export function isPreferredRange(value: string | null): value is TimeRange {
 }
 
 export function encodeHideReadPreference(value: boolean): '1' | '0' {
+	return value ? '1' : '0';
+}
+
+export function parseEnabledPreference(value: string | null): boolean | null {
+	if (value === null) return null;
+	if (value === '1' || value === 'true') return true;
+	if (value === '0' || value === 'false') return false;
+	return null;
+}
+
+export function encodeEnabledPreference(value: boolean): '1' | '0' {
 	return value ? '1' : '0';
 }

@@ -4,13 +4,16 @@ import { resolve } from '$app/paths';
 import { page } from '$app/state';
 import type { TimeRange } from '$lib/hn-client';
 import {
+	DEFAULT_KEYBOARD_SHORTCUTS_ENABLED,
 	PREFERENCE_COOKIE_KEYS,
 	PREFERENCE_STORAGE_KEYS,
 	THEME_MODES,
+	encodeEnabledPreference,
 	encodeHideReadPreference,
 	isPreferredRange,
 	isSortMode,
 	isThemeMode,
+	parseEnabledPreference,
 	parseHideReadPreference,
 	type SortMode,
 	type ThemeMode
@@ -26,6 +29,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		selectedSortMode: initial.sortMode,
 		hideReadStories: initial.hideRead,
 		selectedThemeMode: initial.themeMode,
+		keyboardShortcutsEnabled: DEFAULT_KEYBOARD_SHORTCUTS_ENABLED,
 		hasHydratedPreferences: false
 	});
 
@@ -63,6 +67,10 @@ export function createPreferencesController(initial: FeedPreferences) {
 			encodeHideReadPreference(state.hideReadStories)
 		);
 		localStorage.setItem(PREFERENCE_STORAGE_KEYS.theme, state.selectedThemeMode);
+		localStorage.setItem(
+			PREFERENCE_STORAGE_KEYS.keyboardShortcutsEnabled,
+			encodeEnabledPreference(state.keyboardShortcutsEnabled)
+		);
 
 		document.cookie = `${PREFERENCE_COOKIE_KEYS.range}=${state.selectedTimeRange}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
 		document.cookie = `${PREFERENCE_COOKIE_KEYS.sortMode}=${state.selectedSortMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
@@ -130,6 +138,10 @@ export function createPreferencesController(initial: FeedPreferences) {
 		replacePreferenceQueryWithoutReload();
 	}
 
+	function toggleKeyboardShortcutsEnabled(): void {
+		state.keyboardShortcutsEnabled = !state.keyboardShortcutsEnabled;
+	}
+
 	function syncFromServer(next: FeedPreferences): void {
 		state.selectedTimeRange = next.timeRange;
 		state.selectedSortMode = next.sortMode;
@@ -145,6 +157,9 @@ export function createPreferencesController(initial: FeedPreferences) {
 		const storedSortMode = localStorage.getItem(PREFERENCE_STORAGE_KEYS.sortMode);
 		const storedHideRead = localStorage.getItem(PREFERENCE_STORAGE_KEYS.hideRead);
 		const storedTheme = localStorage.getItem(PREFERENCE_STORAGE_KEYS.theme);
+		const storedKeyboardShortcutsEnabled = localStorage.getItem(
+			PREFERENCE_STORAGE_KEYS.keyboardShortcutsEnabled
+		);
 
 		let shouldNavigate = false;
 		if (
@@ -168,6 +183,12 @@ export function createPreferencesController(initial: FeedPreferences) {
 		if (!searchParams.has('theme') && isThemeMode(storedTheme) && storedTheme !== state.selectedThemeMode) {
 			state.selectedThemeMode = storedTheme;
 		}
+
+		const parsedKeyboardShortcutsEnabled = parseEnabledPreference(storedKeyboardShortcutsEnabled);
+		if (parsedKeyboardShortcutsEnabled !== null) {
+			state.keyboardShortcutsEnabled = parsedKeyboardShortcutsEnabled;
+		}
+
 		applyThemeToDom(state.selectedThemeMode);
 
 		state.hasHydratedPreferences = true;
@@ -196,6 +217,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		selectTimeRange,
 		selectSortMode,
 		toggleHideRead,
+		toggleKeyboardShortcutsEnabled,
 		cycleTheme,
 		syncFromServer
 	};

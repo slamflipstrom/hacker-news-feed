@@ -102,6 +102,19 @@ test.describe("HN-RSS smoke", () => {
     await gotoHome(page);
     await appRoot(page).click();
 
+    const shortcutsToggle = appRoot(page).getByRole("button", { name: /Keyboard shortcuts:/ });
+    await expect(shortcutsToggle).toHaveAttribute("aria-pressed", "true");
+    await shortcutsToggle.click();
+    await expect(shortcutsToggle).toHaveAttribute("aria-pressed", "false");
+
+    await appRoot(page).click();
+    await page.keyboard.press("t");
+    await expect(page).not.toHaveURL(/sort=comments/);
+
+    await shortcutsToggle.click();
+    await expect(shortcutsToggle).toHaveAttribute("aria-pressed", "true");
+
+    await appRoot(page).click();
     await page.keyboard.press("t");
     await expect(page).toHaveURL(/sort=comments/);
 
@@ -167,6 +180,28 @@ test.describe("HN-RSS smoke", () => {
     const commentsPopup = await commentsPopupPromise;
     await expect(commentsPopup).toHaveURL(/news\.ycombinator\.com\/item\?id=/);
     await commentsPopup.close();
+  });
+
+  test("native keyboard activation on focused controls works", async ({ page }) => {
+    await gotoHome(page);
+
+    const discussedButton = appRoot(page)
+      .getByRole("group", { name: "Sort stories" })
+      .getByRole("button", { name: "Most Discussed", exact: true });
+    await discussedButton.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/sort=comments/);
+    await expect(discussedButton).toHaveAttribute("aria-pressed", "true");
+
+    const showReadButton = appRoot(page).getByRole("button", { name: "Show read" }).first();
+    await showReadButton.focus();
+    await page.keyboard.press("Space");
+    await expect(page).toHaveURL(/hideRead=1/);
+
+    const unreadOnlyButton = appRoot(page).getByRole("button", { name: "Unread only" }).first();
+    await unreadOnlyButton.focus();
+    await page.keyboard.press("Space");
+    await expect(page).not.toHaveURL(/hideRead=1/);
   });
 
   test("mobile viewport has no horizontal overflow", async ({ page }) => {

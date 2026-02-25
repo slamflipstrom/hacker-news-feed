@@ -20,6 +20,7 @@
 		selectedSortMode: SortMode;
 		hideReadStories: boolean;
 		themeMode: ThemeMode;
+		keyboardShortcutsEnabled: boolean;
 		showKeyboardShortcuts: boolean;
 		getRangeHref: (timeRange: TimeRange) => string;
 		onSelectTimeRange: (timeRange: TimeRange) => Promise<void>;
@@ -29,6 +30,7 @@
 		onShowSavedStories: () => void;
 		onCycleTheme: () => void;
 		onToggleKeyboardShortcuts: () => void;
+		onToggleKeyboardShortcutsEnabled: () => void;
 		onMarkAllRead: () => void;
 		onRefresh: () => void;
 		hasUnreadStories: boolean;
@@ -45,6 +47,7 @@
 		selectedSortMode,
 		hideReadStories,
 		themeMode,
+		keyboardShortcutsEnabled,
 		showKeyboardShortcuts,
 		getRangeHref,
 		onSelectTimeRange,
@@ -54,6 +57,7 @@
 		onShowSavedStories,
 		onCycleTheme,
 		onToggleKeyboardShortcuts,
+		onToggleKeyboardShortcutsEnabled,
 		onMarkAllRead,
 		onRefresh,
 		hasUnreadStories,
@@ -160,6 +164,14 @@
 		{/if}
 	</div>
 	<p class="keyboard-shortcuts-toggle">
+		<button
+			type="button"
+			class="keyboard-shortcuts-enabled-toggle"
+			aria-pressed={keyboardShortcutsEnabled}
+			onclick={onToggleKeyboardShortcutsEnabled}
+		>
+			Keyboard shortcuts: {keyboardShortcutsEnabled ? 'On' : 'Off'}
+		</button>
 		<button
 			type="button"
 			class="keyboard-shortcuts-link"
@@ -353,6 +365,33 @@
 
 	.keyboard-shortcuts-toggle {
 		margin: 0.75rem 0 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.keyboard-shortcuts-enabled-toggle {
+		padding: 0.35rem 0.7rem;
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text-secondary);
+		font-size: 0.78rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.keyboard-shortcuts-enabled-toggle:hover {
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
+	}
+
+	.keyboard-shortcuts-enabled-toggle[aria-pressed='true'] {
+		border-color: var(--color-accent-border);
+		background: var(--color-accent-bg);
+		color: var(--color-accent-text);
 	}
 
 	.keyboard-shortcuts-link {

@@ -108,6 +108,7 @@
 	}
 
 	const navigation = createNavigationController({
+		areKeyboardShortcutsEnabled: () => preferences.state.keyboardShortcutsEnabled,
 		getDisplayedStories: () => displayedStories,
 		getStoryElementId,
 		onOpenStory: openStory,
@@ -156,6 +157,7 @@
 		selectedSortMode={preferences.state.selectedSortMode}
 		hideReadStories={preferences.state.hideReadStories}
 		themeMode={preferences.state.selectedThemeMode}
+		keyboardShortcutsEnabled={preferences.state.keyboardShortcutsEnabled}
 		{showKeyboardShortcuts}
 		getRangeHref={preferences.getRangeHref}
 		onSelectTimeRange={preferences.selectTimeRange}
@@ -165,6 +167,7 @@
 		onShowSavedStories={showSavedStories}
 		onCycleTheme={preferences.cycleTheme}
 		onToggleKeyboardShortcuts={toggleKeyboardShortcuts}
+		onToggleKeyboardShortcutsEnabled={preferences.toggleKeyboardShortcutsEnabled}
 		onMarkAllRead={() => storyState.markAllRead(displayedStories)}
 		onRefresh={handleRefresh}
 		{hasUnreadStories}
