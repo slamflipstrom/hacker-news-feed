@@ -124,8 +124,21 @@ test.describe("HN-RSS smoke", () => {
     await page.keyboard.press("k");
     await expect(activeTitle).toHaveText(originalActive);
 
+    // Regression check: `c` should still open comments even when focus is on an interactive control.
+    const focusedCommentsPopupPromise = page.waitForEvent("popup");
+    await page.keyboard.press("c");
+    const focusedCommentsPopup = await focusedCommentsPopupPromise;
+    await expect(focusedCommentsPopup).toHaveURL(/news\.ycombinator\.com\/item\?id=/);
+    await focusedCommentsPopup.close();
+
     // Move focus back to non-interactive surface for global action shortcuts.
     await appRoot(page).click();
+
+    await page.keyboard.press("h");
+    await expect(page).toHaveURL(/hideRead=1/);
+
+    await page.keyboard.press("h");
+    await expect(page).not.toHaveURL(/hideRead=1/);
 
     const activeItem = appRoot(page).locator(".story-list .story-item.active").first();
     await page.keyboard.press("s");
@@ -136,6 +149,12 @@ test.describe("HN-RSS smoke", () => {
 
     await page.keyboard.press("m");
     await expect(activeItem.getByText("Read")).toBeVisible();
+
+    const enterPopupPromise = page.waitForEvent("popup");
+    await page.keyboard.press("Enter");
+    const enterPopup = await enterPopupPromise;
+    await expect(enterPopup).toHaveURL(/https?:\/\//);
+    await enterPopup.close();
 
     const openPopupPromise = page.waitForEvent("popup");
     await page.keyboard.press("o");

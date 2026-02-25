@@ -346,3 +346,45 @@ Status: Completed.
 - Added document `<title>` in layout head.
 - Updated light/dark/system color tokens and active range foreground treatment for WCAG contrast compliance.
 - Removed read-state opacity dimming that reduced text/control contrast.
+
+---
+
+# Comments Shortcut Regression (2026-02-25)
+
+## Objective
+Restore `c` keyboard shortcut behavior for opening Hacker News comments.
+
+## Plan
+- [x] Identify why `c` does not trigger comments opening.
+- [x] Patch keyboard shortcut guard logic to allow `c` in the focused-interactive state.
+- [x] Add an e2e regression test that presses `c` while focus is on an interactive control.
+- [x] Run verification tests.
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm test:e2e --grep "keyboard shortcuts work"` passed.
+- `pnpm test:unit` passed.
+
+### Root cause
+- In `src/lib/features/feed/navigation.svelte.ts`, the focus safety guard returned early for all shortcut keys except `j`/`k` when focus was inside interactive elements (`a`, `button`, etc.).
+- This blocked the `c` branch from running whenever a control had focus, even though opening comments via `c` should remain available.
+
+---
+
+# Keyboard Shortcut Coverage Expansion (2026-02-25)
+
+## Objective
+Add Playwright coverage for `h` and `Enter` keyboard shortcuts so regressions are caught automatically.
+
+## Plan
+- [x] Extend the existing `keyboard shortcuts work` smoke test to validate `h` toggles hide-read on/off.
+- [x] Extend the same test to validate `Enter` opens the active story.
+- [x] Run targeted Playwright verification for the keyboard suite.
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm test:e2e --grep "keyboard shortcuts work"` passed.
