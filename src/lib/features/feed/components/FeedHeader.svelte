@@ -29,6 +29,10 @@
 		onShowSavedStories: () => void;
 		onCycleTheme: () => void;
 		onToggleKeyboardShortcuts: () => void;
+		onMarkAllRead: () => void;
+		onRefresh: () => void;
+		hasUnreadStories: boolean;
+		minutesAgo: number;
 	}
 
 	let {
@@ -49,7 +53,11 @@
 		onShowAllStories,
 		onShowSavedStories,
 		onCycleTheme,
-		onToggleKeyboardShortcuts
+		onToggleKeyboardShortcuts,
+		onMarkAllRead,
+		onRefresh,
+		hasUnreadStories,
+		minutesAgo
 	}: Props = $props();
 </script>
 
@@ -62,15 +70,24 @@
 				🔥 Top {storiesLimit} Hacker News Stories
 			{/if}
 		</h1>
-		<button
-			type="button"
-			class="theme-toggle"
-			class:active={themeMode !== 'system'}
-			aria-label="Cycle theme: current is {themeMode}"
-			onclick={onCycleTheme}
-		>
-			{THEME_LABELS[themeMode]}
-		</button>
+		<div class="header-actions">
+			<span class="last-updated">{minutesAgo === 0 ? 'Just updated' : `Updated ${minutesAgo}m ago`}</span>
+			<button
+				type="button"
+				class="refresh-btn"
+				aria-label="Refresh stories"
+				onclick={onRefresh}
+			>↻</button>
+			<button
+				type="button"
+				class="theme-toggle"
+				class:active={themeMode !== 'system'}
+				aria-label="Cycle theme: current is {themeMode}"
+				onclick={onCycleTheme}
+			>
+				{THEME_LABELS[themeMode]}
+			</button>
+		</div>
 	</div>
 	<div class="view-selector" role="group" aria-label="Story scope">
 		<button
@@ -136,6 +153,11 @@
 		>
 			{hideReadStories ? 'Unread only' : 'Show read'}
 		</button>
+		{#if hasUnreadStories && !showingSavedOnly}
+			<button type="button" class="mark-all-btn" onclick={onMarkAllRead}>
+				Mark all read
+			</button>
+		{/if}
 	</div>
 	<p class="keyboard-shortcuts-toggle">
 		<button
@@ -252,6 +274,55 @@
 		border-color: var(--color-accent-border);
 		background: var(--color-accent-bg);
 		color: var(--color-accent-text);
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.last-updated {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		white-space: nowrap;
+	}
+
+	.refresh-btn {
+		padding: 0.35rem 0.6rem;
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		font-size: 1rem;
+		font-family: inherit;
+		cursor: pointer;
+		line-height: 1;
+	}
+
+	.refresh-btn:hover {
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
+		color: var(--color-text-secondary);
+	}
+
+	.mark-all-btn {
+		padding: 0.38rem 0.7rem;
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		font-size: 0.8rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	.mark-all-btn:hover {
+		border-color: var(--color-border-hover);
+		background: var(--color-surface-hover);
+		color: var(--color-text-secondary);
 	}
 
 	.theme-toggle {

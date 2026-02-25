@@ -8,7 +8,7 @@
 
 {#if show}
 	<p class="keyboard-hint">
-		Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read • t sort • r range
+		Keyboard: j/k navigate • o/Enter open • c comments • s save • m mark read • h hide read • t sort • r range
 	</p>
 {/if}
 

@@ -10,6 +10,7 @@ interface NavigationDependencies {
 	onMarkStoryRead: (storyId: string) => void;
 	onToggleSortMode: () => void;
 	onCycleTimeRange: () => void;
+	onToggleHideRead: () => void;
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -74,6 +75,12 @@ export function createNavigationController(deps: NavigationDependencies) {
 		if (key === 'r') {
 			event.preventDefault();
 			deps.onCycleTimeRange();
+			return;
+		}
+
+		if (key === 'h') {
+			event.preventDefault();
+			deps.onToggleHideRead();
 			return;
 		}
 

@@ -107,6 +107,12 @@ export function createStoryStateController() {
 		state.readStoryIds = [...state.readStoryIds, storyId];
 	}
 
+	function markAllRead(stories: HNStory[]): void {
+		const newIds = stories.map((s) => s.objectID).filter((id) => !isStoryRead(id));
+		if (newIds.length === 0) return;
+		state.readStoryIds = [...state.readStoryIds, ...newIds];
+	}
+
 	function toggleStorySaved(story: HNStory): void {
 		const { objectID: storyId } = story;
 
@@ -169,6 +175,7 @@ export function createStoryStateController() {
 		isStorySaved,
 		getSavedStories,
 		markStoryRead,
+		markAllRead,
 		toggleStorySaved,
 		upsertSavedStories
 	};

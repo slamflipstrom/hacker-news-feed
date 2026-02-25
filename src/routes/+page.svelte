@@ -10,6 +10,7 @@
 	import StoryList from '$lib/features/feed/components/StoryList.svelte';
 	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import type { SortMode } from '$lib/preferences';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	const props: { data: PageData } = $props();
@@ -23,6 +24,8 @@
 	const storyState = createStoryStateController();
 	let showKeyboardShortcuts = $state(false);
 	let showingSavedStories = $state(false);
+	let loadedAt = $state(Date.now());
+	let now = $state(Date.now());
 
 	let savedStories = $derived.by(() =>
 		sortStories(storyState.getSavedStories(), preferences.state.selectedSortMode)
@@ -38,6 +41,13 @@
 		if (!preferences.state.hideReadStories) return baseStories;
 		return baseStories.filter((story) => !storyState.isStoryRead(story.objectID));
 	});
+
+	const totalStories = $derived(displayedStories.length);
+	const unreadCount = $derived(
+		displayedStories.filter((s) => !storyState.isStoryRead(s.objectID)).length
+	);
+	const hasUnreadStories = $derived(unreadCount > 0);
+	const minutesAgo = $derived(Math.floor((now - loadedAt) / 60_000));
 
 	function openStory(story: HNStory): void {
 		storyState.markStoryRead(story.objectID);
@@ -93,6 +103,10 @@
 		navigation.resetActiveStoryIndex();
 	}
 
+	async function handleRefresh(): Promise<void> {
+		await invalidateAll();
+	}
+
 	const navigation = createNavigationController({
 		getDisplayedStories: () => displayedStories,
 		getStoryElementId,
@@ -101,7 +115,20 @@
 		onToggleStorySaved: storyState.toggleStorySaved,
 		onMarkStoryRead: storyState.markStoryRead,
 		onToggleSortMode: toggleSortMode,
-		onCycleTimeRange: cycleTimeRange
+		onCycleTimeRange: cycleTimeRange,
+		onToggleHideRead: toggleHideRead
+	});
+
+	$effect(() => {
+		void props.data.stories;
+		loadedAt = Date.now();
+	});
+
+	$effect(() => {
+		const id = setInterval(() => {
+			now = Date.now();
+		}, 60_000);
+		return () => clearInterval(id);
 	});
 
 	$effect(() => {
@@ -138,6 +165,10 @@
 		onShowSavedStories={showSavedStories}
 		onCycleTheme={preferences.cycleTheme}
 		onToggleKeyboardShortcuts={toggleKeyboardShortcuts}
+		onMarkAllRead={() => storyState.markAllRead(displayedStories)}
+		onRefresh={handleRefresh}
+		{hasUnreadStories}
+		{minutesAgo}
 	/>
 
 	<main>
@@ -165,6 +196,11 @@
 					onMarkRead={storyState.markStoryRead}
 				/>
 			{/if}
+			<p class="story-count">
+				{totalStories}
+				{totalStories === 1 ? 'story' : 'stories'}
+				{#if unreadCount > 0}· {unreadCount} unread{:else}· all read{/if}
+			</p>
 			<StoryList
 				stories={displayedStories}
 				activeStoryIndex={navigation.state.activeStoryIndex}
@@ -186,6 +222,12 @@
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
 			sans-serif;
+	}
+
+	.story-count {
+		margin: 0 0 0.5rem;
+		font-size: 0.82rem;
+		color: var(--color-text-muted);
 	}
 
 	.error-message {
