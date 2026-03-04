@@ -36,6 +36,12 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 	);
 }
 
+function blurInteractiveTarget(target: EventTarget | null): void {
+	const element = target as HTMLElement | null;
+	if (!element || !isInteractiveTarget(element)) return;
+	element.blur();
+}
+
 export function createNavigationController(deps: NavigationDependencies) {
 	const state = $state({
 		activeStoryIndex: 0
@@ -89,12 +95,14 @@ export function createNavigationController(deps: NavigationDependencies) {
 		if (key === 'j') {
 			event.preventDefault();
 			setActiveStoryIndex(state.activeStoryIndex + 1);
+			blurInteractiveTarget(event.target);
 			return;
 		}
 
 		if (key === 'k') {
 			event.preventDefault();
 			setActiveStoryIndex(state.activeStoryIndex - 1);
+			blurInteractiveTarget(event.target);
 			return;
 		}
 

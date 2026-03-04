@@ -182,6 +182,48 @@ test.describe("HN-RSS smoke", () => {
     await commentsPopup.close();
   });
 
+  test("keyboard open follows active story after j/k from focused link", async ({ page }) => {
+    await gotoHome(page);
+
+    const firstItem = appRoot(page).locator(".story-list .story-item").nth(0);
+    const secondItem = appRoot(page).locator(".story-list .story-item").nth(1);
+    const firstOpenLink = firstItem.locator(".story-action-open");
+    const secondOpenLink = secondItem.locator(".story-action-open");
+
+    const firstHref = await firstOpenLink.getAttribute("href");
+    const secondHref = await secondOpenLink.getAttribute("href");
+    expect(firstHref).toBeTruthy();
+    expect(secondHref).toBeTruthy();
+    expect(secondHref).not.toBe(firstHref);
+
+    const clickedPopupPromise = page.waitForEvent("popup");
+    await firstOpenLink.click();
+    const clickedPopup = await clickedPopupPromise;
+    await expect(clickedPopup).toHaveURL(firstHref!);
+    await clickedPopup.close();
+
+    // Reproduce stale interactive focus before keyboard navigation.
+    await firstOpenLink.focus();
+    await page.keyboard.press("j");
+
+    const activeOpenHref = await appRoot(page)
+      .locator(".story-list .story-item.active .story-action-open")
+      .getAttribute("href");
+    expect(activeOpenHref).toBe(secondHref);
+
+    const enterPopupPromise = page.waitForEvent("popup");
+    await page.keyboard.press("Enter");
+    const enterPopup = await enterPopupPromise;
+    await expect(enterPopup).toHaveURL(secondHref!);
+    await enterPopup.close();
+
+    const openPopupPromise = page.waitForEvent("popup");
+    await page.keyboard.press("o");
+    const openPopup = await openPopupPromise;
+    await expect(openPopup).toHaveURL(secondHref!);
+    await openPopup.close();
+  });
+
   test("native keyboard activation on focused controls works", async ({ page }) => {
     await gotoHome(page);
 

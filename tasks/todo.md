@@ -1,3 +1,36 @@
+# Keyboard Open Target Regression (2026-03-04)
+
+## Objective
+Ensure `Enter`/`o` opens the currently active story after keyboard navigation (`j/k`), even if a previously clicked story link still has focus.
+
+## Plan
+- [x] Reproduce and isolate the stale-focus keyboard behavior in current code.
+- [x] Add Playwright regression coverage for: click/open one story, navigate with `j/k`, then open via `Enter`/`o`.
+- [x] Patch keyboard navigation handling so open actions target the active story after `j/k`.
+- [x] Run targeted e2e verification.
+
+## Verification
+- [x] `pnpm test:e2e --grep "keyboard open follows active story"`
+- [x] Existing keyboard shortcut smoke test remains green.
+- [x] `pnpm typecheck`
+
+## Review
+Status: Completed.
+
+### What changed
+- Added focused regression coverage in `/Users/samlindstrom/Code/HN-RSS/e2e/smoke.spec.ts`:
+  - click first story open link
+  - keep stale focus on that link
+  - move active selection with `j`
+  - assert `Enter` and `o` open the active story, not the stale focused story
+- Updated `/Users/samlindstrom/Code/HN-RSS/src/lib/features/feed/navigation.svelte.ts` to blur the currently focused interactive element when `j/k` changes active story index.
+
+### Verification notes
+- `pnpm test:e2e --grep "keyboard shortcuts work|keyboard open follows active story"` passed (`2 passed`).
+- `pnpm typecheck` passed (`0 errors`, `0 warnings`).
+
+---
+
 # Saved Posts Access + Management (2026-02-23)
 
 ## Objective
@@ -411,3 +444,60 @@ Status: Completed.
 - `pnpm typecheck` passed.
 - `pnpm test:unit` passed.
 - `pnpm test:e2e --grep "keyboard"` passed.
+
+---
+
+# Project Status Assessment + Next Steps Proposal (2026-02-25)
+
+## Objective
+Review the current repo as an "unfinished project," document factual findings, and propose a pragmatic next-step implementation plan.
+
+## Plan
+- [x] Inventory codebase scope and compare implemented behavior against README + backlog docs.
+- [x] Run verification suite (`pnpm typecheck`, `pnpm test:unit`, `pnpm test:e2e`) to establish current quality baseline.
+- [x] Identify what is complete vs. truly unfinished.
+- [x] Propose a phased plan with priority, effort, and expected user impact.
+
+## Review
+Status: Completed.
+
+### Verification
+- `pnpm typecheck` passed (`svelte-check found 0 errors and 0 warnings`).
+- `pnpm test:unit` passed (`26` tests).
+- `pnpm test:e2e` passed (`10` tests).
+
+### Findings
+1. Core product behavior is stable and well-covered.
+- Server load/preferences logic, story fetching, and feed rendering paths are implemented and tested.
+- Current automated checks are green across typecheck, unit, and deterministic browser e2e.
+
+2. The "unfinished" work is concentrated in explicitly documented backlog items, not broken core functionality.
+- Backlog item: configurable queue size (`todos/configurable-queue.md`).
+- Backlog item: copy-link action on story cards (`todos/copy-link.md`).
+- Backlog item: first-visit onboarding hint (`todos/onboarding-hint.md`).
+- Backlog item: mobile swipe gestures (`todos/swipe-gestures.md`).
+
+3. Small doc drift exists in keyboard shortcut documentation.
+- README keyboard shortcut list omits `h` despite app support (`src/lib/features/feed/navigation.svelte.ts`) and visible hint copy (`src/lib/features/feed/components/KeyboardHint.svelte`).
+
+4. Design/architecture is generally clean for current scope.
+- Feed feature area is modularized (controllers + components + utility helpers).
+- Preference persistence across query/cookie/localStorage is in place and covered by tests.
+
+### Proposed Next Steps
+Phase 1 (quick wins, low risk, high UX value)
+- Implement copy-link button on each story card with transient "Copied!" state.
+- Implement first-visit onboarding hint with dismiss persistence in localStorage.
+- Update README keyboard shortcut list to include `h` and the keyboard-shortcuts enable/disable control.
+
+Phase 2 (medium effort, medium complexity)
+- Implement configurable queue size (3/5/10), persisted using existing preference architecture.
+- Add unit coverage for preference parsing/encoding and e2e coverage for queue-size behavior.
+
+Phase 3 (higher effort, touch/mobile complexity)
+- Implement swipe gestures for save/skip on StoryCard with clear threshold and cancellation behavior.
+- Add targeted mobile e2e for swipe interactions and conflict checks with links/buttons.
+
+### Delivery Recommendation
+- Deliver as 3 small PRs (Phase 1, 2, 3) to isolate risk and keep review velocity high.
+- Keep deterministic e2e as a required merge gate for each phase.
