@@ -164,9 +164,13 @@ export function createStoryStateController() {
 	$effect(() => {
 		if (!browser || !state.hasHydratedStoryState) return;
 
-		localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(state.readStoryIds));
-		localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(state.savedStoryIds));
-		localStorage.setItem(SAVED_STORIES_STORAGE_KEY, JSON.stringify(getSavedStories()));
+		try {
+			localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(state.readStoryIds));
+			localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(state.savedStoryIds));
+			localStorage.setItem(SAVED_STORIES_STORAGE_KEY, JSON.stringify(getSavedStories()));
+		} catch {
+			// localStorage may throw in private browsing mode or when quota is exceeded.
+		}
 	});
 
 	return {

@@ -75,6 +75,36 @@ describe("hn-client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("retries malformed JSON responses and then succeeds", async () => {
+    const fetchMock = vi
+      .fn<() => Promise<Response>>()
+      .mockResolvedValueOnce(
+        new Response("not json{{{", {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+      .mockResolvedValueOnce(
+        responseFrom(
+          {
+            hits: [story({ objectID: "json-recovered", points: 50 })],
+            page: 0,
+            nbPages: 1,
+          },
+          200
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = getStoriesInTimeRange("24h", 10);
+    await vi.advanceTimersByTimeAsync(250);
+    const stories = await pending;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(stories[0]?.objectID).toBe("json-recovered");
+  });
+
   it("retries network errors and then succeeds", async () => {
     const fetchMock = vi
       .fn<() => Promise<Response>>()

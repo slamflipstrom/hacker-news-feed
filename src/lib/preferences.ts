@@ -1,4 +1,4 @@
-import type { TimeRange } from '$lib/hn-client';
+import { TIME_RANGES, type TimeRange } from '$lib/hn-client';
 
 export const SORT_MODES = ['top', 'comments'] as const;
 export type SortMode = (typeof SORT_MODES)[number];
@@ -41,8 +41,8 @@ export function parseHideReadPreference(value: string | null): boolean | null {
 	return null;
 }
 
-export function isPreferredRange(value: string | null): value is TimeRange {
-	return value === '24h' || value === '7d' || value === '30d';
+export function isTimeRange(value: string | null): value is TimeRange {
+	return value !== null && TIME_RANGES.includes(value as TimeRange);
 }
 
 export function encodeHideReadPreference(value: boolean): '1' | '0' {

@@ -1,6 +1,5 @@
 import {
   getStoriesInTimeRange,
-  isTimeRange,
   type TimeRange,
 } from "$lib/hn-client";
 import {
@@ -10,6 +9,7 @@ import {
   PREFERENCE_COOKIE_KEYS,
   isSortMode,
   isThemeMode,
+  isTimeRange,
   parseHideReadPreference,
 } from "$lib/preferences";
 import type { PageServerLoad } from "./$types";

@@ -3,7 +3,7 @@ import {
   encodeEnabledPreference,
   encodeHideReadPreference,
   parseEnabledPreference,
-  isPreferredRange,
+  isTimeRange,
   isSortMode,
   isThemeMode,
   parseHideReadPreference,
@@ -26,11 +26,11 @@ describe("preferences helpers", () => {
   });
 
   it("validates preferred time ranges", () => {
-    expect(isPreferredRange("24h")).toBe(true);
-    expect(isPreferredRange("7d")).toBe(true);
-    expect(isPreferredRange("30d")).toBe(true);
-    expect(isPreferredRange("90d")).toBe(false);
-    expect(isPreferredRange(null)).toBe(false);
+    expect(isTimeRange("24h")).toBe(true);
+    expect(isTimeRange("7d")).toBe(true);
+    expect(isTimeRange("30d")).toBe(true);
+    expect(isTimeRange("90d")).toBe(false);
+    expect(isTimeRange(null)).toBe(false);
   });
 
   it("parses hide-read values", () => {

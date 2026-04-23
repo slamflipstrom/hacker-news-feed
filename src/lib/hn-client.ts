@@ -31,10 +31,6 @@ interface AlgoliaResponse {
   nbPages: number;
 }
 
-export function isTimeRange(value: string | null): value is TimeRange {
-  return value !== null && TIME_RANGES.includes(value as TimeRange);
-}
-
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -43,7 +39,7 @@ function getBackoffMs(attempt: number): number {
   return 250 * 2 ** attempt;
 }
 
-async function fetchWithRetry(url: string): Promise<Response> {
+async function fetchJsonWithRetry<T>(url: string): Promise<T> {
   for (let attempt = 0; attempt <= FETCH_MAX_RETRIES; attempt += 1) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -52,7 +48,7 @@ async function fetchWithRetry(url: string): Promise<Response> {
       const response = await fetch(url, { signal: controller.signal });
 
       if (response.ok) {
-        return response;
+        return (await response.json()) as T;
       }
 
       const shouldRetry =
@@ -71,6 +67,7 @@ async function fetchWithRetry(url: string): Promise<Response> {
     } catch (error) {
       const retryableError =
         error instanceof TypeError ||
+        error instanceof SyntaxError ||
         (error instanceof Error && error.name === "AbortError");
       const shouldRetry = retryableError && attempt < FETCH_MAX_RETRIES;
 
@@ -115,8 +112,7 @@ export async function getStoriesInTimeRange(
     url.searchParams.set("hitsPerPage", hitsPerPage.toString());
     url.searchParams.set("page", page.toString());
 
-    const response = await fetchWithRetry(url.toString());
-    const data: AlgoliaResponse = await response.json();
+    const data = await fetchJsonWithRetry<AlgoliaResponse>(url.toString());
     pagesAvailable = Math.max(data.nbPages, page + 1);
     allHits.push(...data.hits);
   }

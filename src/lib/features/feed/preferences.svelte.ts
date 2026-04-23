@@ -10,9 +10,9 @@ import {
 	THEME_MODES,
 	encodeEnabledPreference,
 	encodeHideReadPreference,
-	isPreferredRange,
 	isSortMode,
 	isThemeMode,
+	isTimeRange,
 	parseEnabledPreference,
 	parseHideReadPreference,
 	type SortMode,
@@ -59,23 +59,34 @@ export function createPreferencesController(initial: FeedPreferences) {
 		return `${resolve('/')}?${query}`;
 	}
 
+	function setPreferenceCookie(key: string, value: string): void {
+		document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+	}
+
 	function persistPreferenceState(): void {
-		localStorage.setItem(PREFERENCE_STORAGE_KEYS.range, state.selectedTimeRange);
-		localStorage.setItem(PREFERENCE_STORAGE_KEYS.sortMode, state.selectedSortMode);
-		localStorage.setItem(
-			PREFERENCE_STORAGE_KEYS.hideRead,
+		try {
+			localStorage.setItem(PREFERENCE_STORAGE_KEYS.range, state.selectedTimeRange);
+			localStorage.setItem(PREFERENCE_STORAGE_KEYS.sortMode, state.selectedSortMode);
+			localStorage.setItem(
+				PREFERENCE_STORAGE_KEYS.hideRead,
+				encodeHideReadPreference(state.hideReadStories)
+			);
+			localStorage.setItem(PREFERENCE_STORAGE_KEYS.theme, state.selectedThemeMode);
+			localStorage.setItem(
+				PREFERENCE_STORAGE_KEYS.keyboardShortcutsEnabled,
+				encodeEnabledPreference(state.keyboardShortcutsEnabled)
+			);
+		} catch {
+			// localStorage may throw in private browsing mode or when quota is exceeded.
+		}
+
+		setPreferenceCookie(PREFERENCE_COOKIE_KEYS.range, state.selectedTimeRange);
+		setPreferenceCookie(PREFERENCE_COOKIE_KEYS.sortMode, state.selectedSortMode);
+		setPreferenceCookie(
+			PREFERENCE_COOKIE_KEYS.hideRead,
 			encodeHideReadPreference(state.hideReadStories)
 		);
-		localStorage.setItem(PREFERENCE_STORAGE_KEYS.theme, state.selectedThemeMode);
-		localStorage.setItem(
-			PREFERENCE_STORAGE_KEYS.keyboardShortcutsEnabled,
-			encodeEnabledPreference(state.keyboardShortcutsEnabled)
-		);
-
-		document.cookie = `${PREFERENCE_COOKIE_KEYS.range}=${state.selectedTimeRange}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
-		document.cookie = `${PREFERENCE_COOKIE_KEYS.sortMode}=${state.selectedSortMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
-		document.cookie = `${PREFERENCE_COOKIE_KEYS.hideRead}=${encodeHideReadPreference(state.hideReadStories)}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
-		document.cookie = `${PREFERENCE_COOKIE_KEYS.theme}=${state.selectedThemeMode}; path=/; max-age=${PREFERENCE_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+		setPreferenceCookie(PREFERENCE_COOKIE_KEYS.theme, state.selectedThemeMode);
 	}
 
 	function applyThemeToDom(theme: ThemeMode): void {
@@ -164,7 +175,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		let shouldNavigate = false;
 		if (
 			!searchParams.has('range') &&
-			isPreferredRange(storedRange) &&
+			isTimeRange(storedRange) &&
 			storedRange !== state.selectedTimeRange
 		) {
 			state.selectedTimeRange = storedRange;
