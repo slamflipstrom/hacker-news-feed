@@ -66,6 +66,30 @@ describe("story-utils", () => {
     expect(sorted.map((story) => story.objectID)).toEqual(["b", "c", "a"]);
   });
 
+  it("sorts stories by hot with age decay", () => {
+    const nowSeconds = Math.floor(new Date("2026-02-23T12:00:00Z").getTime() / 1000);
+    const stories = [
+      createStory({
+        objectID: "old-high",
+        points: 500,
+        created_at_i: nowSeconds - 10 * 24 * 3600,
+      }),
+      createStory({
+        objectID: "fresh-low",
+        points: 50,
+        created_at_i: nowSeconds - 2 * 3600,
+      }),
+      createStory({
+        objectID: "mid",
+        points: 120,
+        created_at_i: nowSeconds - 12 * 3600,
+      }),
+    ];
+
+    const sorted = sortStories(stories, "hot");
+    expect(sorted.map((story) => story.objectID)).toEqual(["fresh-low", "mid", "old-high"]);
+  });
+
   it("sorts stories by comments with points tiebreaker", () => {
     const stories = [
       createStory({ objectID: "a", num_comments: 10, points: 70 }),

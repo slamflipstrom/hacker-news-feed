@@ -12,6 +12,7 @@ import {
   isTimeRange,
   parseHideReadPreference,
 } from "$lib/preferences";
+import { getComparator } from "$lib/features/feed/story-utils";
 import type { PageServerLoad } from "./$types";
 
 const DEFAULT_TIME_RANGE: TimeRange = "24h";
@@ -83,7 +84,11 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
   });
 
   try {
-    const stories = await getStoriesInTimeRange(timeRange, STORIES_LIMIT * 5);
+    const stories = await getStoriesInTimeRange(
+      timeRange,
+      STORIES_LIMIT * 5,
+      getComparator(resolvedSortMode)
+    );
     const maxAge = CACHE_SECONDS[timeRange];
 
     setHeaders({

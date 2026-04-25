@@ -1,6 +1,6 @@
 import { TIME_RANGES, type TimeRange } from '$lib/hn-client';
 
-export const SORT_MODES = ['top', 'comments'] as const;
+export const SORT_MODES = ['top', 'hot', 'comments'] as const;
 export type SortMode = (typeof SORT_MODES)[number];
 
 export const THEME_MODES = ['system', 'light', 'dark'] as const;

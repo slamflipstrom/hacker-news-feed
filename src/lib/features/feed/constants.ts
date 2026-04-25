@@ -15,6 +15,7 @@ export const TIME_RANGE_OPTIONS: TimeRangeOption[] = [
 
 export const SORT_MODE_LABELS: Record<SortMode, string> = {
 	top: 'Top',
+	hot: 'Hot',
 	comments: 'Most Discussed'
 };
 

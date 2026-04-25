@@ -90,7 +90,8 @@ async function fetchJsonWithRetry<T>(url: string): Promise<T> {
 
 export async function getStoriesInTimeRange(
   timeRange: TimeRange,
-  limit: number = 10
+  limit: number = 10,
+  compare: (a: HNStory, b: HNStory) => number = (a, b) => b.points - a.points
 ): Promise<HNStory[]> {
   const now = Math.floor(Date.now() / 1000);
   const timeLimit = now - TIME_RANGE_SECONDS[timeRange];
@@ -125,7 +126,5 @@ export async function getStoriesInTimeRange(
     ).values()
   );
 
-  return dedupedStories
-    .sort((a, b) => b.points - a.points)
-    .slice(0, limit);
+  return dedupedStories.sort(compare).slice(0, limit);
 }

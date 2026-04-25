@@ -91,7 +91,7 @@ describe("+page.server load", () => {
     );
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("7d", 100);
+    expect(mockGetStories).toHaveBeenCalledWith("7d", 100, expect.any(Function));
     expect(data.timeRange).toBe("7d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(true);
@@ -120,7 +120,7 @@ describe("+page.server load", () => {
     const { event, headers } = createLoadEvent("/", cookies);
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("30d", 100);
+    expect(mockGetStories).toHaveBeenCalledWith("30d", 100, expect.any(Function));
     expect(data.timeRange).toBe("30d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(false);
@@ -143,7 +143,7 @@ describe("+page.server load", () => {
     );
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("24h", 100);
+    expect(mockGetStories).toHaveBeenCalledWith("24h", 100, expect.any(Function));
     expect(data.timeRange).toBe("24h");
     expect(data.sortMode).toBe("top");
     expect(data.hideRead).toBe(false);
