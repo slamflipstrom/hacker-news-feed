@@ -23,6 +23,9 @@ const CACHE_SECONDS: Record<TimeRange, number> = {
   "7d": 600,
   "30d": 900,
 };
+// Hot ranking depends on Date.now() at render time, so a long shared cache
+// would pin the ordering for everyone until expiry. Keep it short.
+const HOT_CACHE_SECONDS = 60;
 const PREFERENCE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
@@ -83,16 +86,19 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
     sameSite: "lax",
   });
 
+  const isHotMode = resolvedSortMode === "hot";
+
   try {
-    const stories = await getStoriesInTimeRange(
-      timeRange,
-      STORIES_LIMIT * 5,
-      getComparator(resolvedSortMode)
-    );
-    const maxAge = CACHE_SECONDS[timeRange];
+    const stories = await getStoriesInTimeRange(timeRange, STORIES_LIMIT * 5, {
+      compare: getComparator(resolvedSortMode),
+      endpoint: isHotMode ? "search_by_date" : "search",
+      minPoints: isHotMode ? 1 : 10,
+    });
+    const maxAge = isHotMode ? HOT_CACHE_SECONDS : CACHE_SECONDS[timeRange];
 
     setHeaders({
       "Cache-Control": `public, max-age=${maxAge}, stale-while-revalidate=60`,
+      Vary: "Cookie",
     });
 
     return {
@@ -117,6 +123,7 @@ export const load: PageServerLoad = async ({ url, setHeaders, cookies }) => {
 
     setHeaders({
       "Cache-Control": "no-store",
+      Vary: "Cookie",
     });
 
     return {

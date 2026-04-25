@@ -88,11 +88,23 @@ async function fetchJsonWithRetry<T>(url: string): Promise<T> {
   throw new Error("Failed to fetch Hacker News stories after retries");
 }
 
+export type AlgoliaEndpoint = "search" | "search_by_date";
+
+export interface GetStoriesOptions {
+  compare?: (a: HNStory, b: HNStory) => number;
+  endpoint?: AlgoliaEndpoint;
+  minPoints?: number;
+}
+
 export async function getStoriesInTimeRange(
   timeRange: TimeRange,
   limit: number = 10,
-  compare: (a: HNStory, b: HNStory) => number = (a, b) => b.points - a.points
+  options: GetStoriesOptions = {}
 ): Promise<HNStory[]> {
+  const compare = options.compare ?? ((a, b) => b.points - a.points);
+  const endpoint = options.endpoint ?? "search";
+  const minPoints = options.minPoints ?? 10;
+
   const now = Math.floor(Date.now() / 1000);
   const timeLimit = now - TIME_RANGE_SECONDS[timeRange];
 
@@ -107,9 +119,12 @@ export async function getStoriesInTimeRange(
       break;
     }
 
-    const url = new URL(`${ALGOLIA_API_BASE}/search`);
+    const url = new URL(`${ALGOLIA_API_BASE}/${endpoint}`);
     url.searchParams.set("tags", "story");
-    url.searchParams.set("numericFilters", `created_at_i>${timeLimit},points>10`);
+    url.searchParams.set(
+      "numericFilters",
+      `created_at_i>${timeLimit},points>${minPoints}`
+    );
     url.searchParams.set("hitsPerPage", hitsPerPage.toString());
     url.searchParams.set("page", page.toString());
 

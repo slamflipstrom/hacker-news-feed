@@ -91,12 +91,21 @@ describe("+page.server load", () => {
     );
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("7d", 100, expect.any(Function));
+    expect(mockGetStories).toHaveBeenCalledWith(
+      "7d",
+      100,
+      expect.objectContaining({
+        compare: expect.any(Function),
+        endpoint: "search",
+        minPoints: 10,
+      })
+    );
     expect(data.timeRange).toBe("7d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(true);
     expect(data.themeMode).toBe("light");
     expect(headers["Cache-Control"]).toBe("public, max-age=600, stale-while-revalidate=60");
+    expect(headers["Vary"]).toBe("Cookie");
 
     expect(cookies.setCalls).toEqual(
       expect.arrayContaining([
@@ -120,12 +129,21 @@ describe("+page.server load", () => {
     const { event, headers } = createLoadEvent("/", cookies);
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("30d", 100, expect.any(Function));
+    expect(mockGetStories).toHaveBeenCalledWith(
+      "30d",
+      100,
+      expect.objectContaining({
+        compare: expect.any(Function),
+        endpoint: "search",
+        minPoints: 10,
+      })
+    );
     expect(data.timeRange).toBe("30d");
     expect(data.sortMode).toBe("comments");
     expect(data.hideRead).toBe(false);
     expect(data.themeMode).toBe("dark");
     expect(headers["Cache-Control"]).toBe("public, max-age=900, stale-while-revalidate=60");
+    expect(headers["Vary"]).toBe("Cookie");
   });
 
   it("uses defaults for invalid query and cookie values", async () => {
@@ -143,12 +161,21 @@ describe("+page.server load", () => {
     );
     const data = await runLoad(event);
 
-    expect(mockGetStories).toHaveBeenCalledWith("24h", 100, expect.any(Function));
+    expect(mockGetStories).toHaveBeenCalledWith(
+      "24h",
+      100,
+      expect.objectContaining({
+        compare: expect.any(Function),
+        endpoint: "search",
+        minPoints: 10,
+      })
+    );
     expect(data.timeRange).toBe("24h");
     expect(data.sortMode).toBe("top");
     expect(data.hideRead).toBe(false);
     expect(data.themeMode).toBe("system");
     expect(headers["Cache-Control"]).toBe("public, max-age=300, stale-while-revalidate=60");
+    expect(headers["Vary"]).toBe("Cookie");
   });
 
   it("returns fallback payload and no-store cache-control when story load fails", async () => {
@@ -161,5 +188,27 @@ describe("+page.server load", () => {
     expect(data.stories).toEqual([]);
     expect(data.error).toBe("Could not load stories right now. Please try again shortly.");
     expect(headers["Cache-Control"]).toBe("no-store");
+    expect(headers["Vary"]).toBe("Cookie");
+  });
+
+  it("uses search_by_date endpoint and short cache for hot mode", async () => {
+    mockGetStories.mockResolvedValue([story({ objectID: "hot" })]);
+    const cookies = createCookies();
+
+    const { event, headers } = createLoadEvent("/?range=7d&sort=hot", cookies);
+    const data = await runLoad(event);
+
+    expect(mockGetStories).toHaveBeenCalledWith(
+      "7d",
+      100,
+      expect.objectContaining({
+        compare: expect.any(Function),
+        endpoint: "search_by_date",
+        minPoints: 1,
+      })
+    );
+    expect(data.sortMode).toBe("hot");
+    expect(headers["Cache-Control"]).toBe("public, max-age=60, stale-while-revalidate=60");
+    expect(headers["Vary"]).toBe("Cookie");
   });
 });

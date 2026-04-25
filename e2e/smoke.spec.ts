@@ -115,6 +115,10 @@ test.describe("HN-RSS smoke", () => {
     await expect(shortcutsToggle).toHaveAttribute("aria-pressed", "true");
 
     await appRoot(page).click();
+    // `t` cycles top → hot → comments → top across all three sort modes.
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/sort=hot/);
+
     await page.keyboard.press("t");
     await expect(page).toHaveURL(/sort=comments/);
 

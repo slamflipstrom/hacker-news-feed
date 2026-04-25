@@ -68,8 +68,12 @@
 	}
 
 	function toggleSortMode(): void {
+		const currentIndex = SORT_MODE_OPTIONS.findIndex(
+			(option) => option.value === preferences.state.selectedSortMode
+		);
 		const nextSortMode: SortMode =
-			preferences.state.selectedSortMode === 'top' ? 'comments' : 'top';
+			SORT_MODE_OPTIONS[(currentIndex + 1) % SORT_MODE_OPTIONS.length]?.value ??
+			SORT_MODE_OPTIONS[0].value;
 		selectSortMode(nextSortMode);
 	}
 
