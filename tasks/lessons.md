@@ -6,3 +6,10 @@
 
 ## 2026-02-25
 - When adding focused-interactive guards for keyboard shortcuts, include all intended global shortcuts (`c` for comments, not just `j/k`) and add an explicit regression test for focused-control behavior.
+
+## 2026-07-10: Never `git checkout <file>` to undo a temporary edit
+Used `git checkout src/lib/hn-client.ts` to revert a deliberate red-path test
+edit — but the file also held the uncommitted outage fix, so checkout wiped
+both. Rule: before intentionally breaking a file for a red-path proof, either
+commit the good state first or `cp` the file aside and restore that copy.
+`git checkout` restores HEAD, not "the state before my last edit".

@@ -121,10 +121,11 @@ export async function getStoriesInTimeRange(
 
     const url = new URL(`${ALGOLIA_API_BASE}/${endpoint}`);
     url.searchParams.set("tags", "story");
-    url.searchParams.set(
-      "numericFilters",
-      `created_at_i>${timeLimit},points>${minPoints}`
-    );
+    // Note: `points` is intentionally NOT included here. The HN Algolia index
+    // no longer lists `points` in numericAttributesForFiltering, so filtering
+    // on it server-side now returns a 400. Points filtering is applied
+    // client-side below instead.
+    url.searchParams.set("numericFilters", `created_at_i>${timeLimit}`);
     url.searchParams.set("hitsPerPage", hitsPerPage.toString());
     url.searchParams.set("page", page.toString());
 
@@ -136,7 +137,7 @@ export async function getStoriesInTimeRange(
   const dedupedStories = Array.from(
     new Map(
       allHits
-        .filter((story) => story.title)
+        .filter((story) => story.title && story.points > minPoints)
         .map((story) => [story.objectID, story] as const)
     ).values()
   );

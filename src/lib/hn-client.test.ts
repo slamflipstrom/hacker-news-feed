@@ -223,7 +223,29 @@ describe("hn-client", () => {
     const nowSeconds = Math.floor(new Date("2026-02-23T12:00:00Z").getTime() / 1000);
     const expectedCutoff = nowSeconds - 604800;
     expect(calledUrl.searchParams.get("numericFilters")).toBe(
-      `created_at_i>${expectedCutoff},points>10`
+      `created_at_i>${expectedCutoff}`
     );
+  });
+
+  it("filters out stories at or below minPoints client-side", async () => {
+    const fetchMock = vi.fn<() => Promise<Response>>().mockResolvedValue(
+      responseFrom(
+        {
+          hits: [
+            story({ objectID: "low", points: 10 }),
+            story({ objectID: "high", points: 11 }),
+          ],
+          page: 0,
+          nbPages: 1,
+        },
+        200
+      )
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const stories = await getStoriesInTimeRange("24h", 10, { minPoints: 10 });
+
+    expect(stories.map((entry) => entry.objectID)).toEqual(["high"]);
   });
 });

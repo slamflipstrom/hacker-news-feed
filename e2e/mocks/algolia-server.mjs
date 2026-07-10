@@ -8,6 +8,17 @@ const MAX_HITS_PER_PAGE = 200;
 const fixturePath = new URL("../fixtures/algolia/stories.json", import.meta.url);
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
 const baseStories = Array.isArray(fixture.stories) ? fixture.stories : [];
+
+// Mirror the real index's numericAttributesForFiltering: the live API returns
+// 400 for any other attribute, so the mock must too — a mock more permissive
+// than production hides exactly the outage class it exists to prevent.
+const filterableFixturePath = new URL(
+  "../fixtures/algolia/filterable-attributes.json",
+  import.meta.url
+);
+const FILTERABLE_NUMERIC_ATTRIBUTES = new Set(
+  JSON.parse(readFileSync(filterableFixturePath, "utf8")).numericAttributesForFiltering
+);
 const RESPONSE_MODES = new Set(["normal", "empty", "error500"]);
 let responseMode = "normal";
 
@@ -92,10 +103,24 @@ function setResponseMode(nextMode) {
   return false;
 }
 
-function handleSearch(requestUrl, response) {
+function handleSearch(requestUrl, response, { sortByDate = false } = {}) {
   if (responseMode === "error500") {
     sendJson(response, 500, {
       error: "Injected server failure",
+    });
+    return;
+  }
+
+  // Real Algolia rejects filters on non-whitelisted attributes before doing
+  // anything else. Same message shape as the live API.
+  const numericFilters = parseNumericFilters(requestUrl.searchParams);
+  const invalidFilter = numericFilters.find(
+    (filter) => !FILTERABLE_NUMERIC_ATTRIBUTES.has(filter.field)
+  );
+  if (invalidFilter) {
+    sendJson(response, 400, {
+      code: 400,
+      message: `invalid numeric attribute(${invalidFilter.field}), attribute not specified in numericAttributesForFiltering setting`,
     });
     return;
   }
@@ -114,11 +139,14 @@ function handleSearch(requestUrl, response) {
     return;
   }
 
-  const numericFilters = parseNumericFilters(requestUrl.searchParams);
   const stories =
     responseMode === "empty"
       ? []
       : applyNumericFilters(materializeStories(), numericFilters);
+
+  if (sortByDate) {
+    stories.sort((a, b) => b.created_at_i - a.created_at_i);
+  }
 
   const start = page * hitsPerPage;
   const end = start + hitsPerPage;
@@ -148,6 +176,11 @@ const server = http.createServer((request, response) => {
 
   if (method === "GET" && requestUrl.pathname === "/api/v1/search") {
     handleSearch(requestUrl, response);
+    return;
+  }
+
+  if (method === "GET" && requestUrl.pathname === "/api/v1/search_by_date") {
+    handleSearch(requestUrl, response, { sortByDate: true });
     return;
   }
 

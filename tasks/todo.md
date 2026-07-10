@@ -1,3 +1,121 @@
+# Sort Review Fixes (2026-04-25)
+
+## Objective
+Address top concerns from sort review of commit 9751112:
+1. `toggleSortMode` (keyboard `s`) skips `hot` — binary top↔comments toggle.
+2. CDN/browser cache + `Date.now()` in comparator pins hot ordering for 5 min.
+3. Algolia query (`/search` with `points>10`) is biased against fresh low-points stories — the very ones hot is meant to surface.
+4. Missing `Vary: Cookie` on cookie-dependent responses.
+
+## Plan
+- [x] `toggleSortMode` cycles through `SORT_MODE_OPTIONS` (mirror `cycleTimeRange` pattern).
+- [x] `getStoriesInTimeRange` accepts an options object: `{ compare, endpoint, minPoints }`. Keep `(timeRange, limit)` positional for backward compat with existing tests.
+- [x] In `+page.server.ts`: for `hot`, pass `endpoint: 'search_by_date'` + `minPoints: 1`. Other modes keep current behavior.
+- [x] In `+page.server.ts`: cap `max-age` at 60s for `hot`. Add `Vary: Cookie` to all responses (success and error).
+- [x] Update `src/tests/page.server-load.test.ts` assertions for new signature; add hot-mode test.
+- [x] Run `pnpm typecheck` + `pnpm test:unit`.
+
+## Verification
+- [x] `pnpm typecheck` — 0 errors, 0 warnings.
+- [x] `pnpm test:unit` — 29/29 (4 files); added "uses search_by_date endpoint and short cache for hot mode".
+- [x] `pnpm test:e2e` — 11/11 (chromium); updated `keyboard shortcuts work` to exercise full `t` cycle (top→hot→comments→top).
+
+## Review
+
+### What changed
+- `src/routes/+page.svelte` (`toggleSortMode`): cycles through all `SORT_MODE_OPTIONS` instead of binary top↔comments. Keyboard `s` now reaches `hot`.
+- `src/lib/hn-client.ts`: introduced `GetStoriesOptions { compare, endpoint, minPoints }` as the third arg. Defaults preserve prior behavior, so unrelated tests keep their `(timeRange, limit)` positional calls.
+- `src/routes/+page.server.ts`:
+  - `hot` mode now hits `/search_by_date` (recency-ordered candidate pool) with `minPoints=1`, so fresh low-points stories are eligible.
+  - `hot` cache: `max-age=60` (vs 300/600/900). Hot ordering depends on `Date.now()` at render time; long shared caches would pin the order.
+  - All responses (success + error) now include `Vary: Cookie` so caches respect cookie-driven preference variation.
+- `src/tests/page.server-load.test.ts`: updated 4 assertions for the options-object arg, asserts `Vary: Cookie` on all paths, and adds an explicit hot-mode test.
+
+### Notes
+- `points>1` is strictly `>` in Algolia, so the filter admits stories with 2+ points. With the hot formula `(points-1)/(ageHours+2)^1.8`, 1-point stories score 0 anyway; this just avoids fetching dead weight.
+- The 60s cache for hot still allows short-window CDN reuse but avoids the "frozen leaderboard" feel.
+- `Vary: Cookie` is mainly a browser-cache concern in this app since cookies are written on every request (CDNs typically skip caching responses with `Set-Cookie`). The fix still hardens the contract in case a deployment overrides that default.
+
+---
+
+# Freshness-Weighted "Hot" Sort (2026-04-24)
+
+## Objective
+Add a third sort mode `'hot'` that blends points with recency so 7d/30d views diverge from 24h. Addresses user feedback that views currently surface the same subset of stories.
+
+## Plan
+- [x] Added `'hot'` to `SORT_MODES` in `src/lib/preferences.ts`.
+- [x] Added `'hot'` label ("Hot") to `SORT_MODE_LABELS` in `src/lib/features/feed/constants.ts`.
+- [x] In `src/lib/features/feed/story-utils.ts`: added `hotScore(story, nowSeconds)` and shared `getComparator(sortMode)`. `sortStories` now delegates to `getComparator`.
+- [x] In `src/lib/hn-client.ts`: `getStoriesInTimeRange` accepts an optional `compare` parameter; default keeps points-descending behavior so unrelated tests keep passing.
+- [x] In `src/routes/+page.server.ts`: passes `getComparator(resolvedSortMode)` to `getStoriesInTimeRange`.
+- [x] Added `story-utils.test.ts` case "sorts stories by hot with age decay" — fresh 50pt story beats older mid + 10-day-old 500pt under `'hot'`.
+- [x] Updated `src/tests/page.server-load.test.ts` assertions to account for new comparator argument (`expect.any(Function)`).
+
+## Decisions
+- **Default sort**: stays `'top'` — no disruption.
+- **Formula**: `(points - 1) / (ageHours + 2)^1.8` — HN-style with gravity 1.8 (steeper than HN's 1.5 to make the effect visible inside a 30d window).
+- **Server sorts before slicing**: ensures the 100-story prefetch contains the right top-20 for the mode. Cloudflare caches by full URL so different sort query params are cached separately — no collision.
+- **Label**: "Hot" — short, matches HN vocabulary.
+
+## Verification
+- [x] `pnpm typecheck` — 0 errors, 0 warnings.
+- [x] `pnpm test:unit` — 28/28 (4 files); includes new "sorts stories by hot with age decay" test.
+- [x] `pnpm test:e2e smoke preferences-persistence` — 8/8.
+- [x] Manual browser check: `?range=30d&sort=hot` and `?range=30d&sort=top` produce visibly different orderings. Under `hot`, a 10h-old 406pt story beats a 3-day-old 2281pt story (which is #1 under `top`).
+
+## Out of Scope
+- Plans #4 (RSS feed) and #5 (inline comment preview) — separate tasks.
+
+## Review
+
+### What changed
+- New sort mode `'hot'` available throughout: cookie/query/localStorage round-trip works (covered by existing `preferences-persistence` e2e), header buttons render, `Top`/`Hot`/`Most Discussed` switch correctly.
+- `getComparator(sortMode)` in `story-utils.ts` is now the single source of truth for sort ordering — used by both client `sortStories` and the server's prefetch slice.
+- `getStoriesInTimeRange` is comparator-agnostic; backward-compatible default keeps all existing call sites working.
+
+### Followups (not done)
+- Plan #4 — emit `/feed.xml`.
+- Plan #5 — inline top comment preview.
+
+---
+
+# Fix High + Medium Issues from Code Review (2026-04-23)
+
+## Objective
+Address all High and Medium severity issues identified in the project review: cookie encoding asymmetry, unhandled JSON parse in fetch retry, uncaught localStorage writes, and duplicate `TimeRange` type guards.
+
+## Plan
+- [x] **H1 — Cookie encoding**: Extracted `setPreferenceCookie(key, value)` helper in `src/lib/features/feed/preferences.svelte.ts:62-64` that `encodeURIComponent`s the value. Replaced the 4 raw template strings.
+- [x] **H2 — `response.json()` inside retry**: Reworked `fetchWithRetry` → `fetchJsonWithRetry<T>(url)` in `src/lib/hn-client.ts:42-89`. JSON parse now inside the try; `SyntaxError` added to retryable-error check. Caller updated.
+- [x] **H2 — Unit test**: Added "retries malformed JSON responses and then succeeds" in `src/lib/hn-client.test.ts`.
+- [x] **H3 — localStorage try/catch (story-state)**: Wrapped `localStorage.setItem` block in `src/lib/features/feed/story-state.svelte.ts:164-172`.
+- [x] **H3 — localStorage try/catch (preferences)**: Wrapped `localStorage.setItem` block in `src/lib/features/feed/preferences.svelte.ts:66-81`. Cookie writes stay outside the try.
+- [x] **M4 — Consolidate `TimeRange` guard**: Deleted `isTimeRange` from `hn-client.ts` and `isPreferredRange` from `preferences.ts`. Single canonical `isTimeRange` now lives in `src/lib/preferences.ts`.
+- [x] **M4 — Update callers**: Updated imports in `+page.server.ts`, `preferences.svelte.ts` (+ usage site), and `preferences.test.ts`.
+
+## Verification
+- [x] `pnpm typecheck` — 0 errors, 0 warnings.
+- [x] `pnpm test:unit` — 27/27 tests pass across 4 files (including new malformed-JSON retry test).
+- [x] `pnpm test:e2e smoke preferences-persistence` — 8/8 tests pass (includes cookie round-trip coverage).
+
+## Review
+
+### What changed
+- `src/lib/hn-client.ts` — `fetchWithRetry` replaced by generic `fetchJsonWithRetry<T>`; `SyntaxError` now treated as retryable alongside `TypeError`/`AbortError`. Deleted duplicate `isTimeRange` guard.
+- `src/lib/preferences.ts` — Imported `TIME_RANGES` and added canonical `isTimeRange` guard (replacing `isPreferredRange`).
+- `src/lib/features/feed/preferences.svelte.ts` — New `setPreferenceCookie` helper wraps `encodeURIComponent` + cookie boilerplate. `try/catch` around the localStorage block. Renamed import/usage of `isPreferredRange` → `isTimeRange`.
+- `src/lib/features/feed/story-state.svelte.ts` — `try/catch` around the localStorage sync effect.
+- `src/routes/+page.server.ts` — Switched `isTimeRange` import from `$lib/hn-client` to `$lib/preferences`.
+- `src/lib/preferences.test.ts` — Renamed `isPreferredRange` → `isTimeRange` in the test for consistency.
+- `src/lib/hn-client.test.ts` — Added malformed-JSON retry test case.
+
+### Notes
+- No user-facing behavior change today: current cookie values are enum strings (`'dark'`, `'24h'`) that round-trip unchanged through `encodeURIComponent`. Fix hardens the contract for future values.
+- The new test confirms that a 200 OK with malformed JSON now triggers retry instead of crashing the server load — previously the `SyntaxError` escaped the retry loop entirely.
+
+---
+
 # Keyboard Open Target Regression (2026-03-04)
 
 ## Objective
@@ -501,3 +619,48 @@ Phase 3 (higher effort, touch/mobile complexity)
 ### Delivery Recommendation
 - Deliver as 3 small PRs (Phase 1, 2, 3) to isolate risk and keep review velocity high.
 - Keep deterministic e2e as a required merge gate for each phase.
+
+---
+
+# Guard Against Upstream API Contract Drift (2026-07-09)
+
+## Context
+Prod outage: HN Algolia removed `points` from `numericAttributesForFiltering`.
+Every request sent `numericFilters=created_at_i>X,points>10` → HTTP 400 → total
+outage. All 30 unit tests + 4 e2e specs passed throughout.
+
+## Root cause of the *detection* failure
+1. `e2e/mocks/algolia-server.mjs` filters on any numeric field; real Algolia
+   whitelists. Mock was more permissive than reality → bug invisible in CI.
+2. `E2E_USE_LIVE=1` supported in `playwright.config.ts` but never run in CI.
+3. `console.error` in a CF Worker is unobservable (no Logpush/Sentry/health check).
+4. Permanent 400 surfaced to users as transient ("try again shortly").
+
+## Plan
+### Tier 1 — prevent + detect (recommended)
+- [x] Make the e2e mock enforce the real contract: allow numericFilters only on
+      a whitelist (`created_at_i`, `num_comments`, `created_at`); return
+      `400 {"code":400,"message":"invalid numeric attribute(...)"}` otherwise.
+- [x] Add `src/lib/hn-client.contract.test.ts` — hits the REAL Algolia API,
+      asserts (a) our exact query params are accepted, (b) response shape has
+      `hits[]`/`nbPages` and hits carry the fields `HNStory` declares. Gated
+      behind `RUN_CONTRACT_TESTS=1` so normal CI stays hermetic/offline.
+- [ ] Add `.github/workflows/contract.yml`: nightly cron + manual dispatch,
+      runs the contract test, opens/updates an issue on failure.
+
+### Tier 2 — shrink blast radius
+- [ ] Validate the Algolia response shape in `hn-client.ts`; throw a named
+      `AlgoliaContractError` instead of a downstream `TypeError`.
+- [ ] Distinguish permanent (4xx) vs transient (5xx/network) failures. Log 4xx
+      at error severity as a contract break; show users an honest message.
+- [ ] Serve last-known-good stories from Cloudflare Cache API/KV on upstream
+      failure rather than an empty error page.
+
+### Tier 3 — observability (SKIPPED — pet project, no monitoring wanted)
+- [ ] `/api/health` route that exercises `getStoriesInTimeRange` and 503s on failure.
+- [ ] Wire an uptime monitor at it; enable Workers Logs or Sentry.
+
+## Verification
+- [x] Strict mock: temporarily re-added `points>10` → smoke spec went red. Reverted; suite green.
+- [x] Contract test: 3/3 pass against live API (`pnpm test:contract`).
+- [x] `pnpm test:unit` 30 passed / 3 skipped.
