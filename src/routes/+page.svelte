@@ -34,12 +34,15 @@
 	let displayedStories = $derived.by(() => {
 		const baseStories = showingSavedStories
 			? savedStories
-			: sortStories(props.data.stories, preferences.state.selectedSortMode).slice(
-					0,
-					props.data.storiesLimit
-				);
-		if (!preferences.state.hideReadStories) return baseStories;
-		return baseStories.filter((story) => !storyState.isStoryRead(story.objectID));
+			: sortStories(props.data.stories, preferences.state.selectedSortMode);
+		// Filter before slicing so the server's over-fetch acts as a backfill
+		// reserve: with "Unread only" on, reading a story pulls in the next one.
+		const visibleStories = preferences.state.hideReadStories
+			? baseStories.filter((story) => !storyState.isStoryRead(story.objectID))
+			: baseStories;
+		return showingSavedStories
+			? visibleStories
+			: visibleStories.slice(0, props.data.storiesLimit);
 	});
 
 	const totalStories = $derived(displayedStories.length);

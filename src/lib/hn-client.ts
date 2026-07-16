@@ -25,6 +25,15 @@ const FETCH_TIMEOUT_MS = 8000;
 const FETCH_MAX_RETRIES = 2;
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
 
+export class AlgoliaApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, statusText: string) {
+    super(`Algolia API error: ${status} ${statusText}`);
+    this.status = status;
+  }
+}
+
 interface AlgoliaResponse {
   hits: HNStory[];
   page: number;
@@ -55,7 +64,7 @@ async function fetchJsonWithRetry<T>(url: string): Promise<T> {
         RETRYABLE_STATUS_CODES.has(response.status) && attempt < FETCH_MAX_RETRIES;
 
       if (!shouldRetry) {
-        throw new Error(`Algolia API error: ${response.status} ${response.statusText}`);
+        throw new AlgoliaApiError(response.status, response.statusText);
       }
 
       console.warn("[HN-Client] Retrying after API failure", {
@@ -96,18 +105,11 @@ export interface GetStoriesOptions {
   minPoints?: number;
 }
 
-export async function getStoriesInTimeRange(
-  timeRange: TimeRange,
-  limit: number = 10,
-  options: GetStoriesOptions = {}
+async function fetchStoryPages(
+  endpoint: AlgoliaEndpoint,
+  timeLimit: number,
+  minPoints: number | null
 ): Promise<HNStory[]> {
-  const compare = options.compare ?? ((a, b) => b.points - a.points);
-  const endpoint = options.endpoint ?? "search";
-  const minPoints = options.minPoints ?? 10;
-
-  const now = Math.floor(Date.now() / 1000);
-  const timeLimit = now - TIME_RANGE_SECONDS[timeRange];
-
   // Pull multiple pages to improve top-score accuracy across larger ranges.
   const hitsPerPage = 200;
   const maxPagesToFetch = 5;
@@ -121,17 +123,52 @@ export async function getStoriesInTimeRange(
 
     const url = new URL(`${ALGOLIA_API_BASE}/${endpoint}`);
     url.searchParams.set("tags", "story");
-    // Note: `points` is intentionally NOT included here. The HN Algolia index
-    // no longer lists `points` in numericAttributesForFiltering, so filtering
-    // on it server-side now returns a 400. Points filtering is applied
-    // client-side below instead.
-    url.searchParams.set("numericFilters", `created_at_i>${timeLimit}`);
+    // Filtering on points server-side matters because Algolia caps pagination
+    // at 1000 hits: unfiltered, search_by_date's newest 1000 stories span
+    // under a day, while points>10 stretches the reachable window to ~7 days.
+    const numericFilters = [`created_at_i>${timeLimit}`];
+    if (minPoints !== null) {
+      numericFilters.push(`points>${minPoints}`);
+    }
+    url.searchParams.set("numericFilters", numericFilters.join(","));
     url.searchParams.set("hitsPerPage", hitsPerPage.toString());
     url.searchParams.set("page", page.toString());
 
     const data = await fetchJsonWithRetry<AlgoliaResponse>(url.toString());
     pagesAvailable = Math.max(data.nbPages, page + 1);
     allHits.push(...data.hits);
+  }
+
+  return allHits;
+}
+
+export async function getStoriesInTimeRange(
+  timeRange: TimeRange,
+  limit: number = 10,
+  options: GetStoriesOptions = {}
+): Promise<HNStory[]> {
+  const compare = options.compare ?? ((a, b) => b.points - a.points);
+  const endpoint = options.endpoint ?? "search";
+  const minPoints = options.minPoints ?? 10;
+
+  const now = Math.floor(Date.now() / 1000);
+  const timeLimit = now - TIME_RANGE_SECONDS[timeRange];
+
+  let allHits: HNStory[];
+  try {
+    allHits = await fetchStoryPages(endpoint, timeLimit, minPoints);
+  } catch (error) {
+    // Algolia has dropped `points` from numericAttributesForFiltering before
+    // (July 2026 outage). If the query is rejected, degrade to date-only
+    // filtering — the client-side points filter below keeps results correct,
+    // at the cost of a shallower candidate pool.
+    if (!(error instanceof AlgoliaApiError && error.status === 400)) {
+      throw error;
+    }
+    console.warn("[HN-Client] Query rejected; retrying without points filter", {
+      error: error.message,
+    });
+    allHits = await fetchStoryPages(endpoint, timeLimit, null);
   }
 
   const dedupedStories = Array.from(

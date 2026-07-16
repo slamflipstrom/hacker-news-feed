@@ -64,15 +64,51 @@ describe("hn-client", () => {
     expect(stories[0]?.objectID).toBe("ok");
   });
 
-  it("does not retry non-retryable HTTP status", async () => {
+  it("retries a 400 once without the points filter, then throws if still rejected", async () => {
     const fetchMock = vi
-      .fn<() => Promise<Response>>()
-      .mockResolvedValue(responseFrom({ hits: [], page: 0, nbPages: 1 }, 400));
+      .fn<(url: string) => Promise<Response>>()
+      .mockImplementation(async () => responseFrom({ hits: [], page: 0, nbPages: 1 }, 400));
 
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getStoriesInTimeRange("24h", 10)).rejects.toThrow("Algolia API error: 400");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    const firstFilters = new URL(fetchMock.mock.calls[0]?.[0] ?? "").searchParams.get(
+      "numericFilters"
+    );
+    const secondFilters = new URL(fetchMock.mock.calls[1]?.[0] ?? "").searchParams.get(
+      "numericFilters"
+    );
+    expect(firstFilters).toContain("points>");
+    expect(secondFilters).not.toContain("points>");
+  });
+
+  it("recovers stories via the points-free fallback when the points filter is rejected", async () => {
+    const fetchMock = vi
+      .fn<(url: string) => Promise<Response>>()
+      .mockImplementation(async (url) => {
+        const filters = new URL(url).searchParams.get("numericFilters") ?? "";
+        if (filters.includes("points>")) {
+          return responseFrom({ hits: [], page: 0, nbPages: 1 }, 400);
+        }
+
+        return responseFrom(
+          {
+            hits: [story({ objectID: "fallback", points: 42 })],
+            page: 0,
+            nbPages: 1,
+          },
+          200
+        );
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const stories = await getStoriesInTimeRange("24h", 10);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(stories.map((entry) => entry.objectID)).toEqual(["fallback"]);
   });
 
   it("retries malformed JSON responses and then succeeds", async () => {
@@ -223,7 +259,7 @@ describe("hn-client", () => {
     const nowSeconds = Math.floor(new Date("2026-02-23T12:00:00Z").getTime() / 1000);
     const expectedCutoff = nowSeconds - 604800;
     expect(calledUrl.searchParams.get("numericFilters")).toBe(
-      `created_at_i>${expectedCutoff}`
+      `created_at_i>${expectedCutoff},points>10`
     );
   });
 

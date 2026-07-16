@@ -1,4 +1,4 @@
 {
-  "comment": "Numeric attributes the real HN Algolia index accepts in numericFilters (its numericAttributesForFiltering setting). Verified live 2026-07-09: points, num_comments, created_at, story_id, parent_id all return 400. The mock server enforces this whitelist so CI rejects queries the real API would reject; hn-client.contract.test.ts re-verifies each entry against the live API when RUN_CONTRACT_TESTS=1.",
-  "numericAttributesForFiltering": ["created_at_i"]
+  "comment": "Numeric attributes the real HN Algolia index accepts in numericFilters (its numericAttributesForFiltering setting). Verified live 2026-07-16: created_at_i and points are both accepted — Algolia restored points after removing it in the 2026-07 outage. Only attributes the app actually filters on are listed. The mock server enforces this whitelist so CI rejects queries the real API would reject; hn-client.contract.test.ts re-verifies each entry against the live API when RUN_CONTRACT_TESTS=1.",
+  "numericAttributesForFiltering": ["created_at_i", "points"]
 }

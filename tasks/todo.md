@@ -1,3 +1,39 @@
+# Restore Server-Side Points Filter + Unread Backfill (2026-07-16)
+
+## Objective
+Fix two review findings within Algolia API constraints:
+1. Hot mode's `search_by_date` candidate pool only spans ~22h (Algolia caps pagination at 1000 hits), so 7d/30d hot ranges silently show near-identical results. Verified live 2026-07-16 that Algolia accepts `points` in `numericFilters` again — a server-side `points>N` filter stretches the 1000-hit window ~8× (points>10 reaches ~7 days back).
+2. The client slices to 20 stories *before* the hide-read filter, so the 100-story prefetch never backfills; with "Unread only" on, reading shrinks the list instead of pulling story #21.
+
+## Plan
+- [x] `hn-client.ts`: add `AlgoliaApiError` (carries HTTP status); include `points>{minPoints}` in `numericFilters`; on a 400 (Algolia dropped the filter once before, 2026-07), retry once without the points filter. Keep the client-side points filter as the safety net for the fallback path.
+- [x] `e2e/fixtures/algolia/filterable-attributes.json`: add `points` to the whitelist (mock server + contract test pick it up automatically).
+- [x] `+page.svelte`: apply the hide-read filter before `.slice(0, storiesLimit)` so read stories backfill from the prefetch reserve.
+- [x] `hn-client.test.ts`: update query-param and 400 tests for the new filter + fallback; add fallback-success test.
+- [x] `e2e/smoke.spec.ts:78`: hide-read now backfills, so count stays at `initialCount` instead of dropping by 1.
+- [x] Run `pnpm typecheck`, `pnpm test:unit`, `pnpm test:contract`, `pnpm test:e2e`.
+
+## Verification
+- [x] `pnpm typecheck` — 0 errors, 0 warnings (required adding `@types/node`; the contract test's `node:fs`/`process` imports had been failing typecheck since 2026-07-09, pre-existing).
+- [x] `pnpm test:unit` — 31 passed / 3 skipped; the old "does not retry non-retryable HTTP status" test became "retries a 400 once without the points filter", plus a new fallback-recovery test.
+- [x] `pnpm test:contract` — 3/3 against the live API, including the whitelist check that now covers `points`.
+- [x] `pnpm test:e2e` — 11/11 (chromium) against the strict mock, which now accepts `points` filters per the updated fixture.
+
+## Review
+
+### What changed
+- `src/lib/hn-client.ts`: paging loop extracted to `fetchStoryPages(endpoint, timeLimit, minPoints)`; queries now send `created_at_i>cutoff,points>minPoints`. New exported `AlgoliaApiError` carries the HTTP status; `getStoriesInTimeRange` catches a 400 and retries once with the points filter dropped (client-side filter still applies), so an Algolia filter-removal recurrence degrades instead of failing.
+- `src/routes/+page.svelte`: `displayedStories` filters read stories before slicing to `storiesLimit`, so the 100-story prefetch backfills the unread-only view.
+- `e2e/smoke.spec.ts`: hide-read assertion updated from `initialCount - 1` to `initialCount` (backfill).
+
+### Measured impact (live API, 2026-07-16)
+- Algolia caps pagination at 1000 hits. Unfiltered `search_by_date` reaches ~22h back; with `points>10` it reaches ~172h (~7d); with `points>1` (hot mode) ~25h.
+- Hot 24h is now fully covered. Hot 7d/30d still truncate at ~25h, but the gravity formula means only 1–3 day-old stories with ~250+ points could theoretically rank and be missed — acceptable; revisit with a two-pool merge (search + search_by_date) only if it bothers in practice.
+
+---
+
+---
+
 # Sort Review Fixes (2026-04-25)
 
 ## Objective

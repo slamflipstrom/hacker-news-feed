@@ -75,7 +75,9 @@ test.describe("HN-RSS smoke", () => {
     await appRoot(page).getByRole("button", { name: "Show read" }).first().click();
     await expect(page).toHaveURL(/hideRead=1/);
     await expect(firstStoryTitleLocator(page)).not.toHaveText(firstTitle, { timeout: 10_000 });
-    await expect(appRoot(page).locator(".story-list .story-item")).toHaveCount(initialCount - 1);
+    // Hiding a read story backfills from the server's over-fetch, so the
+    // visible count holds steady instead of shrinking.
+    await expect(appRoot(page).locator(".story-list .story-item")).toHaveCount(initialCount);
 
     await appRoot(page).getByRole("button", { name: "Unread only" }).first().click();
     await expect(page).not.toHaveURL(/hideRead=1/);
