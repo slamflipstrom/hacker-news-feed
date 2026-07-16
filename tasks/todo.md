@@ -1,3 +1,19 @@
+# New Badges + Mute List + Caught-Up State (2026-07-16)
+
+## Objective
+Ship review recommendations #4/#5/#6 as three isolated commits (after committing the pending points-filter/backfill work):
+1. "New since your last visit" badges — localStorage `{id: firstSeenAt}` map, badge stories first seen this session, suppress on first-ever visit, prune entries >35d.
+2. Domain/keyword mute list — localStorage-only preference, filtered pre-slice so the 100-story reserve backfills; saved view exempt.
+3. Caught-up empty state + range-aware queue title — celebrate "all read", distinguish "all muted", queue title follows range, ✓ on completed queue.
+
+## Plan
+- [ ] Commit 0: pending points-filter + backfill work (message already drafted).
+- [ ] Feature 4: `story-state.svelte.ts` first-seen map + `isStoryNew`; `New` badge via StoryMeta/StoryCard/StoryList; e2e (remove one id from map → exactly that story badged); typecheck+unit+e2e; commit.
+- [ ] Feature 5: `preferences.ts` parse/encode + storage key; controller state + add/remove; `isStoryMuted` in story-utils (+unit tests); MuteList component in header; pre-slice filter in `+page.svelte`; e2e (mute keyword → story hidden, count backfilled, persists on reload); commit.
+- [ ] Feature 6: empty-state variants (caught up vs all muted vs generic) in `+page.svelte`; QueueSection range-aware title + completion ✓; e2e (mark-all-read × N with hideRead → caught-up message); commit.
+
+---
+
 # Restore Server-Side Points Filter + Unread Backfill (2026-07-16)
 
 ## Objective
