@@ -6,7 +6,9 @@ import {
   isTimeRange,
   isSortMode,
   isThemeMode,
+  normalizeMutedTerm,
   parseHideReadPreference,
+  parseMutedTermsPreference,
 } from "./preferences";
 
 describe("preferences helpers", () => {
@@ -63,5 +65,25 @@ describe("preferences helpers", () => {
   it("encodes enabled/disabled preference values", () => {
     expect(encodeEnabledPreference(true)).toBe("1");
     expect(encodeEnabledPreference(false)).toBe("0");
+  });
+
+  it("normalizes muted terms to trimmed lowercase", () => {
+    expect(normalizeMutedTerm("  Medium.COM ")).toBe("medium.com");
+    expect(normalizeMutedTerm("   ")).toBe("");
+  });
+
+  it("parses stored muted terms, normalizing and deduping", () => {
+    expect(parseMutedTermsPreference('["Rust", " rust ", "ai", 42, null]')).toEqual([
+      "rust",
+      "ai",
+    ]);
+    expect(parseMutedTermsPreference("[]")).toEqual([]);
+  });
+
+  it("returns null for missing or malformed muted terms", () => {
+    expect(parseMutedTermsPreference(null)).toBeNull();
+    expect(parseMutedTermsPreference("not json{{{")).toBeNull();
+    expect(parseMutedTermsPreference('{"a":1}')).toBeNull();
+    expect(parseMutedTermsPreference('"rust"')).toBeNull();
   });
 });

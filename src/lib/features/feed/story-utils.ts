@@ -23,6 +23,14 @@ export function getStoryFaviconUrl(story: HNStory): string {
 	return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(getStoryDomain(story))}&sz=32`;
 }
 
+export function isStoryMuted(story: HNStory, mutedTerms: string[]): boolean {
+	if (mutedTerms.length === 0) return false;
+
+	const title = story.title.toLowerCase();
+	const domain = getStoryDomain(story);
+	return mutedTerms.some((term) => title.includes(term) || domain.includes(term));
+}
+
 export function hotScore(story: HNStory, nowSeconds: number): number {
 	const ageHours = Math.max(0, (nowSeconds - story.created_at_i) / 3600);
 	return (story.points - 1) / Math.pow(ageHours + 2, 1.8);

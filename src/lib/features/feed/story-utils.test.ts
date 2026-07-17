@@ -7,6 +7,7 @@ import {
   getStoryElementId,
   getStoryFaviconUrl,
   getStoryHref,
+  isStoryMuted,
   sortStories,
 } from "./story-utils";
 
@@ -114,5 +115,24 @@ describe("story-utils", () => {
 
   it("creates stable story element ids", () => {
     expect(getStoryElementId("abc")).toBe("story-abc");
+  });
+
+  it("mutes stories by domain or title keyword, case-insensitively", () => {
+    const story = createStory({
+      title: "Show HN: My Rust Side Project",
+      url: "https://blog.medium.com/post",
+    });
+
+    expect(isStoryMuted(story, [])).toBe(false);
+    expect(isStoryMuted(story, ["medium.com"])).toBe(true);
+    expect(isStoryMuted(story, ["rust"])).toBe(true);
+    expect(isStoryMuted(story, ["golang"])).toBe(false);
+  });
+
+  it("mutes url-less stories via the news.ycombinator.com fallback domain", () => {
+    const askHn = createStory({ title: "Ask HN: Anything", url: undefined });
+
+    expect(isStoryMuted(askHn, ["news.ycombinator.com"])).toBe(true);
+    expect(isStoryMuted(askHn, ["example.com"])).toBe(false);
   });
 });

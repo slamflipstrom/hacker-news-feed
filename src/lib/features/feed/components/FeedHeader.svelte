@@ -3,6 +3,7 @@
 	import type { SortMode, ThemeMode } from '$lib/preferences';
 	import type { TimeRangeOption, SortModeOption } from '$lib/features/feed/types';
 	import KeyboardHint from '$lib/features/feed/components/KeyboardHint.svelte';
+	import MuteList from '$lib/features/feed/components/MuteList.svelte';
 
 	const THEME_LABELS: Record<ThemeMode, string> = {
 		system: 'System',
@@ -22,10 +23,13 @@
 		themeMode: ThemeMode;
 		keyboardShortcutsEnabled: boolean;
 		showKeyboardShortcuts: boolean;
+		mutedTerms: string[];
 		getRangeHref: (timeRange: TimeRange) => string;
 		onSelectTimeRange: (timeRange: TimeRange) => Promise<void>;
 		onSelectSortMode: (sortMode: SortMode) => void;
 		onToggleHideRead: () => void;
+		onAddMutedTerm: (term: string) => void;
+		onRemoveMutedTerm: (term: string) => void;
 		onShowAllStories: () => void;
 		onShowSavedStories: () => void;
 		onCycleTheme: () => void;
@@ -49,10 +53,13 @@
 		themeMode,
 		keyboardShortcutsEnabled,
 		showKeyboardShortcuts,
+		mutedTerms,
 		getRangeHref,
 		onSelectTimeRange,
 		onSelectSortMode,
 		onToggleHideRead,
+		onAddMutedTerm,
+		onRemoveMutedTerm,
 		onShowAllStories,
 		onShowSavedStories,
 		onCycleTheme,
@@ -163,6 +170,9 @@
 			</button>
 		{/if}
 	</div>
+	{#if !showingSavedOnly}
+		<MuteList {mutedTerms} {onAddMutedTerm} {onRemoveMutedTerm} />
+	{/if}
 	<p class="keyboard-shortcuts-toggle">
 		<button
 			type="button"

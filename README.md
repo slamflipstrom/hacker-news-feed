@@ -9,6 +9,7 @@ A focused SvelteKit reader for high-signal Hacker News stories.
 - Theme modes: `System`, `Light`, `Dark`
 - Read flow UX: queue, read/save state, and quick actions (`Open`, `Save`, `Skip`)
 - `New` badges on stories that appeared since your last visit (per browser/device)
+- Mute list: hide stories by domain or title keyword (per browser/device); hidden slots backfill from the fetch reserve
 - Saved-post management: switch between `All stories` and `Saved` to revisit or unsave saved items
 - Keyboard shortcuts: `j/k` navigate, `o` open, `c` comments, `s` save, `m` mark read, `t` toggle sort, `r` cycle range
 - Persistent preferences (`range`, `sort`, `hideRead`, `theme`) across URL, cookie, and localStorage

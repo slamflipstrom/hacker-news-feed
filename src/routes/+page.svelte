@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getCommentsHref, getStoryElementId, getStoryHref, sortStories } from '$lib/features/feed/story-utils';
+	import { getCommentsHref, getStoryElementId, getStoryHref, isStoryMuted, sortStories } from '$lib/features/feed/story-utils';
 	import { SORT_MODE_OPTIONS, TIME_RANGE_OPTIONS } from '$lib/features/feed/constants';
 	import { createPreferencesController } from '$lib/features/feed/preferences.svelte';
 	import { createStoryStateController } from '$lib/features/feed/story-state.svelte';
@@ -31,12 +31,17 @@
 		sortStories(storyState.getSavedStories(), preferences.state.selectedSortMode)
 	);
 
+	// Mutes don't apply to saved stories: saving is explicit intent.
+	let candidateStories = $derived.by(() =>
+		sortStories(props.data.stories, preferences.state.selectedSortMode).filter(
+			(story) => !isStoryMuted(story, preferences.state.mutedTerms)
+		)
+	);
+
 	let displayedStories = $derived.by(() => {
-		const baseStories = showingSavedStories
-			? savedStories
-			: sortStories(props.data.stories, preferences.state.selectedSortMode);
+		const baseStories = showingSavedStories ? savedStories : candidateStories;
 		// Filter before slicing so the server's over-fetch acts as a backfill
-		// reserve: with "Unread only" on, reading a story pulls in the next one.
+		// reserve: hiding a read or muted story pulls in the next one.
 		const visibleStories = preferences.state.hideReadStories
 			? baseStories.filter((story) => !storyState.isStoryRead(story.objectID))
 			: baseStories;
@@ -167,10 +172,13 @@
 		themeMode={preferences.state.selectedThemeMode}
 		keyboardShortcutsEnabled={preferences.state.keyboardShortcutsEnabled}
 		{showKeyboardShortcuts}
+		mutedTerms={preferences.state.mutedTerms}
 		getRangeHref={preferences.getRangeHref}
 		onSelectTimeRange={preferences.selectTimeRange}
 		onSelectSortMode={selectSortMode}
 		onToggleHideRead={toggleHideRead}
+		onAddMutedTerm={preferences.addMutedTerm}
+		onRemoveMutedTerm={preferences.removeMutedTerm}
 		onShowAllStories={showAllStories}
 		onShowSavedStories={showSavedStories}
 		onCycleTheme={preferences.cycleTheme}

@@ -16,7 +16,8 @@ export const PREFERENCE_STORAGE_KEYS = {
 	sortMode: 'hnrss:preferred-sort-mode',
 	hideRead: 'hnrss:preferred-hide-read',
 	theme: 'hnrss:preferred-theme',
-	keyboardShortcutsEnabled: 'hnrss:preferred-keyboard-shortcuts-enabled'
+	keyboardShortcutsEnabled: 'hnrss:preferred-keyboard-shortcuts-enabled',
+	mutedTerms: 'hnrss:muted-terms'
 } as const;
 
 export const PREFERENCE_COOKIE_KEYS = {
@@ -58,4 +59,28 @@ export function parseEnabledPreference(value: string | null): boolean | null {
 
 export function encodeEnabledPreference(value: boolean): '1' | '0' {
 	return value ? '1' : '0';
+}
+
+export function normalizeMutedTerm(value: string): string {
+	return value.trim().toLowerCase();
+}
+
+export function parseMutedTermsPreference(value: string | null): string[] | null {
+	if (value === null) return null;
+
+	try {
+		const parsed = JSON.parse(value);
+		if (!Array.isArray(parsed)) return null;
+
+		return Array.from(
+			new Set(
+				parsed
+					.filter((item): item is string => typeof item === 'string')
+					.map(normalizeMutedTerm)
+					.filter(Boolean)
+			)
+		);
+	} catch {
+		return null;
+	}
 }

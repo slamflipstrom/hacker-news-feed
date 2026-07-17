@@ -13,8 +13,10 @@ import {
 	isSortMode,
 	isThemeMode,
 	isTimeRange,
+	normalizeMutedTerm,
 	parseEnabledPreference,
 	parseHideReadPreference,
+	parseMutedTermsPreference,
 	type SortMode,
 	type ThemeMode
 } from '$lib/preferences';
@@ -30,6 +32,7 @@ export function createPreferencesController(initial: FeedPreferences) {
 		hideReadStories: initial.hideRead,
 		selectedThemeMode: initial.themeMode,
 		keyboardShortcutsEnabled: DEFAULT_KEYBOARD_SHORTCUTS_ENABLED,
+		mutedTerms: [] as string[],
 		hasHydratedPreferences: false
 	});
 
@@ -76,6 +79,9 @@ export function createPreferencesController(initial: FeedPreferences) {
 				PREFERENCE_STORAGE_KEYS.keyboardShortcutsEnabled,
 				encodeEnabledPreference(state.keyboardShortcutsEnabled)
 			);
+			// Muted terms are a client-only preference: the server never filters
+			// on them, so no cookie or URL round-trip.
+			localStorage.setItem(PREFERENCE_STORAGE_KEYS.mutedTerms, JSON.stringify(state.mutedTerms));
 		} catch {
 			// localStorage may throw in private browsing mode or when quota is exceeded.
 		}
@@ -153,6 +159,16 @@ export function createPreferencesController(initial: FeedPreferences) {
 		state.keyboardShortcutsEnabled = !state.keyboardShortcutsEnabled;
 	}
 
+	function addMutedTerm(term: string): void {
+		const normalized = normalizeMutedTerm(term);
+		if (!normalized || state.mutedTerms.includes(normalized)) return;
+		state.mutedTerms = [...state.mutedTerms, normalized];
+	}
+
+	function removeMutedTerm(term: string): void {
+		state.mutedTerms = state.mutedTerms.filter((existing) => existing !== term);
+	}
+
 	function syncFromServer(next: FeedPreferences): void {
 		state.selectedTimeRange = next.timeRange;
 		state.selectedSortMode = next.sortMode;
@@ -200,6 +216,13 @@ export function createPreferencesController(initial: FeedPreferences) {
 			state.keyboardShortcutsEnabled = parsedKeyboardShortcutsEnabled;
 		}
 
+		const parsedMutedTerms = parseMutedTermsPreference(
+			localStorage.getItem(PREFERENCE_STORAGE_KEYS.mutedTerms)
+		);
+		if (parsedMutedTerms !== null) {
+			state.mutedTerms = parsedMutedTerms;
+		}
+
 		applyThemeToDom(state.selectedThemeMode);
 
 		state.hasHydratedPreferences = true;
@@ -229,6 +252,8 @@ export function createPreferencesController(initial: FeedPreferences) {
 		selectSortMode,
 		toggleHideRead,
 		toggleKeyboardShortcutsEnabled,
+		addMutedTerm,
+		removeMutedTerm,
 		cycleTheme,
 		syncFromServer
 	};
