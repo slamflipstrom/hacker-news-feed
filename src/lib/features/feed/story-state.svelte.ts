@@ -1,6 +1,8 @@
 import { browser } from '$app/environment';
 import type { HNStory } from '$lib/hn-client';
 import {
+	FIRST_SEEN_MAX_AGE_MS,
+	FIRST_SEEN_STORAGE_KEY,
 	READ_STORAGE_KEY,
 	SAVED_STORAGE_KEY,
 	SAVED_STORIES_STORAGE_KEY
@@ -52,6 +54,24 @@ function parseStoredStories(value: string | null): HNStory[] {
 	}
 }
 
+function parseStoredFirstSeen(value: string | null): Record<string, number> {
+	if (!value) return {};
+
+	try {
+		const parsed = JSON.parse(value);
+		if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+
+		return Object.fromEntries(
+			Object.entries(parsed).filter(
+				(entry): entry is [string, number] =>
+					typeof entry[1] === 'number' && Number.isFinite(entry[1])
+			)
+		);
+	} catch {
+		return {};
+	}
+}
+
 function toStoryById(stories: HNStory[]): Record<string, HNStory> {
 	return Object.fromEntries(stories.map((story) => [story.objectID, story] as const));
 }
@@ -81,10 +101,14 @@ function isSameStorySnapshot(a: HNStory, b: HNStory): boolean {
 }
 
 export function createStoryStateController() {
+	const sessionStartedAt = Date.now();
+
 	const state = $state({
 		readStoryIds: [] as string[],
 		savedStoryIds: [] as string[],
 		savedStoriesById: {} as Record<string, HNStory>,
+		firstSeenAtByStoryId: {} as Record<string, number>,
+		hasPriorVisit: false,
 		hasHydratedStoryState: false
 	});
 
@@ -127,6 +151,27 @@ export function createStoryStateController() {
 		state.savedStoriesById = { ...state.savedStoriesById, [storyId]: toSavedStorySnapshot(story) };
 	}
 
+	function isStoryNew(storyId: string): boolean {
+		return (
+			state.hasPriorVisit && (state.firstSeenAtByStoryId[storyId] ?? 0) >= sessionStartedAt
+		);
+	}
+
+	function recordStoriesSeen(stories: HNStory[]): void {
+		if (!state.hasHydratedStoryState) return;
+
+		const unseenIds = stories
+			.map((story) => story.objectID)
+			.filter((storyId) => state.firstSeenAtByStoryId[storyId] === undefined);
+		if (unseenIds.length === 0) return;
+
+		const now = Date.now();
+		state.firstSeenAtByStoryId = {
+			...state.firstSeenAtByStoryId,
+			...Object.fromEntries(unseenIds.map((storyId) => [storyId, now] as const))
+		};
+	}
+
 	function upsertSavedStories(stories: HNStory[]): void {
 		if (stories.length === 0) return;
 
@@ -158,6 +203,16 @@ export function createStoryStateController() {
 			new Set([...storedSavedStoryIds, ...Object.keys(savedStoriesById)])
 		);
 		state.savedStoriesById = savedStoriesById;
+
+		const storedFirstSeen = parseStoredFirstSeen(localStorage.getItem(FIRST_SEEN_STORAGE_KEY));
+		const pruneCutoff = Date.now() - FIRST_SEEN_MAX_AGE_MS;
+		state.firstSeenAtByStoryId = Object.fromEntries(
+			Object.entries(storedFirstSeen).filter(([, firstSeenAt]) => firstSeenAt >= pruneCutoff)
+		);
+		// On the very first visit everything is unseen; badging the whole page
+		// as "New" would be noise, so newness only kicks in from visit two.
+		state.hasPriorVisit = Object.keys(storedFirstSeen).length > 0;
+
 		state.hasHydratedStoryState = true;
 	});
 
@@ -168,6 +223,7 @@ export function createStoryStateController() {
 			localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(state.readStoryIds));
 			localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(state.savedStoryIds));
 			localStorage.setItem(SAVED_STORIES_STORAGE_KEY, JSON.stringify(getSavedStories()));
+			localStorage.setItem(FIRST_SEEN_STORAGE_KEY, JSON.stringify(state.firstSeenAtByStoryId));
 		} catch {
 			// localStorage may throw in private browsing mode or when quota is exceeded.
 		}
@@ -177,10 +233,12 @@ export function createStoryStateController() {
 		state,
 		isStoryRead,
 		isStorySaved,
+		isStoryNew,
 		getSavedStories,
 		markStoryRead,
 		markAllRead,
 		toggleStorySaved,
-		upsertSavedStories
+		upsertSavedStories,
+		recordStoriesSeen
 	};
 }

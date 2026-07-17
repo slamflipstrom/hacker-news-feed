@@ -10,6 +10,7 @@
 		isActive: boolean;
 		isRead: boolean;
 		isSaved: boolean;
+		isNew?: boolean;
 		onMarkRead: (storyId: string) => void;
 		onToggleSave: (story: HNStory) => void;
 		onSkip: (storyId: string) => void;
@@ -22,6 +23,7 @@
 		isActive,
 		isRead,
 		isSaved,
+		isNew = false,
 		onMarkRead,
 		onToggleSave,
 		onSkip
@@ -71,7 +73,7 @@
 				Skip
 			</button>
 		</div>
-		<StoryMeta {story} {isRead} />
+		<StoryMeta {story} {isRead} {isNew} />
 	</div>
 </li>
 

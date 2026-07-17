@@ -148,6 +148,7 @@
 
 	$effect(() => {
 		storyState.upsertSavedStories(props.data.stories);
+		storyState.recordStoriesSeen(props.data.stories);
 	});
 </script>
 
@@ -216,6 +217,7 @@
 				activeStoryIndex={navigation.state.activeStoryIndex}
 				isStoryRead={storyState.isStoryRead}
 				isStorySaved={storyState.isStorySaved}
+				isStoryNew={storyState.isStoryNew}
 				onMarkRead={storyState.markStoryRead}
 				onToggleSave={storyState.toggleStorySaved}
 				onSkip={skipStory}

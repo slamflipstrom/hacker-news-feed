@@ -8,6 +8,7 @@
 		activeStoryIndex: number;
 		isStoryRead: (storyId: string) => boolean;
 		isStorySaved: (storyId: string) => boolean;
+		isStoryNew: (storyId: string) => boolean;
 		onMarkRead: (storyId: string) => void;
 		onToggleSave: (story: HNStory) => void;
 		onSkip: (storyId: string) => void;
@@ -18,6 +19,7 @@
 		activeStoryIndex,
 		isStoryRead,
 		isStorySaved,
+		isStoryNew,
 		onMarkRead,
 		onToggleSave,
 		onSkip
@@ -33,6 +35,7 @@
 			isActive={index === activeStoryIndex}
 			isRead={isStoryRead(story.objectID)}
 			isSaved={isStorySaved(story.objectID)}
+			isNew={isStoryNew(story.objectID)}
 			onMarkRead={onMarkRead}
 			onToggleSave={onToggleSave}
 			onSkip={onSkip}

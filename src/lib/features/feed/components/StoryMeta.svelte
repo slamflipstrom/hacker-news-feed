@@ -5,9 +5,10 @@
 	interface Props {
 		story: HNStory;
 		isRead: boolean;
+		isNew?: boolean;
 	}
 
-	let { story, isRead }: Props = $props();
+	let { story, isRead, isNew = false }: Props = $props();
 </script>
 
 <div class="story-meta">
@@ -26,6 +27,8 @@
 	<span class="story-author">by {story.author}</span>
 	{#if isRead}
 		<span class="status-badge status-read">Read</span>
+	{:else if isNew}
+		<span class="status-badge status-new">New</span>
 	{/if}
 </div>
 
@@ -91,6 +94,12 @@
 	.status-read {
 		background: var(--color-status-read-bg);
 		color: var(--color-status-read-text);
+	}
+
+	.status-new {
+		background: var(--color-accent-bg);
+		color: var(--color-accent-text-strong);
+		border: 1px solid var(--color-accent-border-light);
 	}
 
 </style>

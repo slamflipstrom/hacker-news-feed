@@ -4,6 +4,10 @@ import type { TimeRangeOption, SortModeOption } from '$lib/features/feed/types';
 export const READ_STORAGE_KEY = 'hnrss:read-story-ids';
 export const SAVED_STORAGE_KEY = 'hnrss:saved-story-ids';
 export const SAVED_STORIES_STORAGE_KEY = 'hnrss:saved-stories';
+export const FIRST_SEEN_STORAGE_KEY = 'hnrss:story-first-seen';
+// A story first seen longer ago than the widest time range (30d) can never
+// reappear in any feed, so its first-seen entry is dead weight. 35d adds slack.
+export const FIRST_SEEN_MAX_AGE_MS = 35 * 24 * 60 * 60 * 1000;
 export const QUEUE_SIZE = 3;
 export const PREFERENCE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
