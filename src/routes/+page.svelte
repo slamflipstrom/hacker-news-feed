@@ -198,19 +198,24 @@
 		{#if !showingSavedStories && props.data.stories.length === 0}
 			<EmptyState message="No stories found in this time range." />
 		{:else if displayedStories.length === 0}
+			<!-- Non-saved emptiness with candidates left means hide-read filtered
+			     everything out, i.e. the reader genuinely finished the range. -->
 			<EmptyState
 				message={
 					showingSavedStories
 						? savedStories.length === 0
 							? 'No saved stories yet.'
 							: 'No saved stories match these filters.'
-						: 'No stories match these filters.'
+						: candidateStories.length === 0
+							? 'Every story in this range is muted. Prune your mute list to see them.'
+							: "You're all caught up — you've read every story in this range. 🎉"
 				}
 			/>
 		{:else}
 			{#if !showingSavedStories}
 				<QueueSection
 					stories={displayedStories}
+					timeRange={preferences.state.selectedTimeRange}
 					isStoryRead={storyState.isStoryRead}
 					onMarkRead={storyState.markStoryRead}
 				/>

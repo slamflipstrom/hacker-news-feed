@@ -1,27 +1,38 @@
 <script lang="ts">
-	import type { HNStory } from '$lib/hn-client';
+	import type { HNStory, TimeRange } from '$lib/hn-client';
 	import { QUEUE_SIZE } from '$lib/features/feed/constants';
 	import { formatTime, getStoryHref } from '$lib/features/feed/story-utils';
 
+	const QUEUE_TITLES: Record<TimeRange, string> = {
+		'24h': "Today's Queue",
+		'7d': "This Week's Queue",
+		'30d': "This Month's Queue"
+	};
+
 	interface Props {
 		stories: HNStory[];
+		timeRange: TimeRange;
 		isStoryRead: (storyId: string) => boolean;
 		onMarkRead: (storyId: string) => void;
 	}
 
-	let { stories, isStoryRead, onMarkRead }: Props = $props();
+	let { stories, timeRange, isStoryRead, onMarkRead }: Props = $props();
 
+	let queueTitle = $derived(QUEUE_TITLES[timeRange]);
 	let queueStories = $derived(stories.slice(0, QUEUE_SIZE));
 	let queueReadCount = $derived(queueStories.filter((story) => isStoryRead(story.objectID)).length);
+	let queueComplete = $derived(queueStories.length > 0 && queueReadCount === queueStories.length);
 	let queueProgress = $derived(
 		queueStories.length > 0 ? Math.round((queueReadCount / queueStories.length) * 100) : 0
 	);
 </script>
 
-<section class="queue-section" aria-label="Today's queue">
+<section class="queue-section" aria-label={queueTitle}>
 	<div class="queue-header">
-		<h2 class="queue-title">Today&apos;s Queue</h2>
-		<p class="queue-progress-label">{queueReadCount}/{queueStories.length} read</p>
+		<h2 class="queue-title">{queueTitle}</h2>
+		<p class="queue-progress-label">
+			{queueReadCount}/{queueStories.length} read{queueComplete ? ' — done ✓' : ''}
+		</p>
 	</div>
 	<div
 		class="queue-progress-track"

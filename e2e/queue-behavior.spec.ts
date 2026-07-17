@@ -47,4 +47,30 @@ test.describe("queue behavior", () => {
     await appRoot(page).locator(".story-list .story-item").first().getByRole("button", { name: "Skip" }).click();
     await expect(queueRegion.getByText("0/3 read")).toBeVisible();
   });
+
+  test("queue title follows the selected time range", async ({ page }) => {
+    await gotoHome(page);
+    await expect(appRoot(page).getByRole("heading", { name: "Today's Queue" })).toBeVisible();
+
+    await appRoot(page).getByRole("link", { name: "Last 7 Days" }).click();
+    await expect(appRoot(page).getByRole("heading", { name: "This Week's Queue" })).toBeVisible();
+
+    await appRoot(page).getByRole("link", { name: "Last 30 Days" }).click();
+    await expect(appRoot(page).getByRole("heading", { name: "This Month's Queue" })).toBeVisible();
+  });
+
+  test("reading every story in the range shows the caught-up state", async ({ page }) => {
+    await gotoHome(page);
+
+    await appRoot(page).getByRole("button", { name: "Show read" }).click();
+    await expect(page).toHaveURL(/hideRead=1/);
+
+    // The fixture serves 40 stories; each "Mark all read" reads the visible 20
+    // and the unread-only view backfills the next 20 from the reserve.
+    await appRoot(page).getByRole("button", { name: "Mark all read" }).click();
+    await appRoot(page).getByRole("button", { name: "Mark all read" }).click();
+
+    await expect(appRoot(page).getByText(/all caught up/i)).toBeVisible();
+    await expect(appRoot(page).getByRole("region", { name: /queue/i })).toHaveCount(0);
+  });
 });

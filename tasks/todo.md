@@ -7,10 +7,27 @@ Ship review recommendations #4/#5/#6 as three isolated commits (after committing
 3. Caught-up empty state + range-aware queue title — celebrate "all read", distinguish "all muted", queue title follows range, ✓ on completed queue.
 
 ## Plan
-- [ ] Commit 0: pending points-filter + backfill work (message already drafted).
-- [ ] Feature 4: `story-state.svelte.ts` first-seen map + `isStoryNew`; `New` badge via StoryMeta/StoryCard/StoryList; e2e (remove one id from map → exactly that story badged); typecheck+unit+e2e; commit.
-- [ ] Feature 5: `preferences.ts` parse/encode + storage key; controller state + add/remove; `isStoryMuted` in story-utils (+unit tests); MuteList component in header; pre-slice filter in `+page.svelte`; e2e (mute keyword → story hidden, count backfilled, persists on reload); commit.
-- [ ] Feature 6: empty-state variants (caught up vs all muted vs generic) in `+page.svelte`; QueueSection range-aware title + completion ✓; e2e (mark-all-read × N with hideRead → caught-up message); commit.
+- [x] Commit 0: pending points-filter + backfill work (a343952).
+- [x] Feature 4: `story-state.svelte.ts` first-seen map + `isStoryNew`; `New` badge via StoryMeta/StoryCard/StoryList; e2e (remove one id from map → exactly that story badged); typecheck+unit+e2e; commit (53fc099).
+- [x] Feature 5: `preferences.ts` parse/encode + storage key; controller state + add/remove; `isStoryMuted` in story-utils (+unit tests); MuteList component in header; pre-slice filter in `+page.svelte`; e2e (mute keyword → story hidden, count backfilled, persists on reload); commit (3e98cc4).
+- [x] Feature 6: empty-state variants (caught up vs all muted vs generic) in `+page.svelte`; QueueSection range-aware title + completion ✓; e2e (mark-all-read × 2 with hideRead → caught-up message); commit.
+
+## Verification
+- [x] `pnpm typecheck` — 0 errors, 0 warnings after each feature.
+- [x] `pnpm test:unit` — 36 passed / 3 skipped (new: isStoryMuted ×2, muted-terms parse/normalize ×3).
+- [x] `pnpm test:e2e` — 15/15 (new specs: new-badges, mute-list; queue-behavior gained range-title and caught-up tests).
+- [x] svelte-autofixer clean on new/modified components (story-state suggestions are the documented hydration/persistence false positives).
+
+## Review
+
+### What changed
+- Feature 4 (New badges): `hnrss:story-first-seen` map in story-state controller; recorded post-hydration for every payload story; badge when first seen this session AND a prior visit exists; entries >35d pruned; read stories suppress the badge.
+- Feature 5 (Mute list): `hnrss:muted-terms` (localStorage only, normalized lowercase); `isStoryMuted` matches domain or title substring; MuteList panel in header (hidden in saved view); filtering happens pre-slice so mutes backfill; saved stories exempt.
+- Feature 6 (Caught-up): distinct empty states — "all caught up" (hide-read exhausted the range) vs "every story muted" vs saved-view messages; queue title follows range (Today's/This Week's/This Month's); "— done ✓" on completed queue.
+
+### Notes
+- E2E interacting with header controls must gate on hydration (poll a post-hydration localStorage key) — SSR renders the buttons before handlers attach; mute-list.spec initially flaked on this.
+- The generic "No stories match these filters." copy became unreachable for the non-saved view (emptiness there always means all-read or all-muted) and was replaced by the specific variants.
 
 ---
 
